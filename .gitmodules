@@ -2,3 +2,7 @@
 	path = frontend
 	url = https://github.com/GloriaUPUP/projectD.git
 	branch = frontend
+[submodule "backend"]
+	path = backend
+	url = https://github.com/GloriaUPUP/projectD.git
+	branch = backend
