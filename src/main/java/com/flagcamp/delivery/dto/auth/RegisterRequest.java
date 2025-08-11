@@ -1,5 +1,6 @@
 package com.flagcamp.delivery.dto.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,10 +17,12 @@ public class RegisterRequest {
     
     @NotBlank(message = "First name is required")
     @Size(max = 50, message = "First name cannot exceed 50 characters")
+    @JsonProperty("firstName")
     private String firstName;
     
     @NotBlank(message = "Last name is required")
     @Size(max = 50, message = "Last name cannot exceed 50 characters")
+    @JsonProperty("lastName") 
     private String lastName;
     
     @Size(max = 20, message = "Phone number cannot exceed 20 characters")
