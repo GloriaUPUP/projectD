@@ -25,7 +25,7 @@ public class AddressController {
     public ResponseEntity<ApiResponse<List<Address>>> getAddresses() {
         try {
             // In a real implementation, get current user from security context
-            Long userId = 1L; // Mock user ID
+            Long userId = 2L; // Mock user ID (using existing user)
             
             List<Address> addresses = addressService.getAddressesByUserId(userId);
             return ResponseEntity.ok(ApiResponse.success(addresses));
@@ -57,7 +57,7 @@ public class AddressController {
     public ResponseEntity<ApiResponse<Address>> addAddress(@Valid @RequestBody AddressRequest request) {
         try {
             // In a real implementation, get current user from security context
-            Long userId = 1L; // Mock user ID
+            Long userId = 2L; // Mock user ID (using existing user)
             
             Address address = addressService.addAddress(request, userId);
             return ResponseEntity.ok(ApiResponse.success("地址添加成功", address));
@@ -111,7 +111,7 @@ public class AddressController {
     public ResponseEntity<ApiResponse<Address>> setDefaultAddress(@PathVariable Long addressId) {
         try {
             // In a real implementation, get current user from security context and verify ownership
-            Long userId = 1L; // Mock user ID
+            Long userId = 2L; // Mock user ID (using existing user)
             
             Address address = addressService.setDefaultAddress(addressId, userId);
             if (address == null) {
@@ -142,7 +142,7 @@ public class AddressController {
     public ResponseEntity<ApiResponse<List<Address>>> searchAddresses(@RequestParam String q) {
         try {
             // In a real implementation, get current user from security context
-            Long userId = 1L; // Mock user ID
+            Long userId = 2L; // Mock user ID (using existing user)
             
             List<Address> addresses = addressService.searchAddresses(userId, q);
             return ResponseEntity.ok(ApiResponse.success(addresses));

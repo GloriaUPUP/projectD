@@ -10,8 +10,12 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/delivery_app
     username: gloriaupup
-    password:
+    password: ""
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
     
   jpa:
     hibernate:
@@ -50,7 +54,7 @@ logging:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:mySecretKey}
+  secret: ${JWT_SECRET:myVerySecretKeyThatIsLongEnoughForJWTSigningAndMustBeAtLeast256BitsLong}
   expiration: 86400000 # 24 hours in milliseconds
 
 # Payment Configuration

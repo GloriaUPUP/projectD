@@ -2,7 +2,7 @@ package com.flagcamp.delivery.controller;
 
 import com.flagcamp.delivery.dto.ApiResponse;
 import com.flagcamp.delivery.dto.order.CreateOrderRequest;
-import com.flagcamp.delivery.entity.Order;
+import com.flagcamp.delivery.entity.DeliveryOrder;
 import com.flagcamp.delivery.service.OrderService;
 import com.flagcamp.delivery.service.PaymentService;
 import jakarta.validation.Valid;
@@ -32,12 +32,12 @@ public class DeliveryController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         try {
             // In a real implementation, get current user from security context
-            Long userId = 1L; // Mock user ID
+            Long userId = 2L; // Mock user ID (using existing user)
             
-            Order order = orderService.createOrder(request, userId);
+            DeliveryOrder order = orderService.createOrder(request, userId);
             
             Map<String, Object> response = new HashMap<>();
-            response.put("orderId", order.getOrderNumber());
+            response.put("orderId", "ORD" + order.getId());
             response.put("status", order.getStatus().toString().toLowerCase());
             response.put("createdAt", order.getCreatedAt());
             
@@ -60,10 +60,10 @@ public class DeliveryController {
             @RequestParam(required = false) String status) {
         try {
             // In a real implementation, get current user from security context
-            Long userId = 1L; // Mock user ID
+            Long userId = 2L; // Mock user ID (using existing user)
             
             Pageable pageable = PageRequest.of(page - 1, limit);
-            Page<Order> ordersPage = orderService.getOrdersHistory(userId, status, pageable);
+            Page<DeliveryOrder> ordersPage = orderService.getOrdersHistory(userId, status, pageable);
             
             Map<String, Object> response = new HashMap<>();
             response.put("orders", orderService.convertToOrderSummaryList(ordersPage.getContent()));
@@ -86,7 +86,7 @@ public class DeliveryController {
     @GetMapping("/{orderNumber}/details")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getOrderDetails(@PathVariable String orderNumber) {
         try {
-            Order order = orderService.findByOrderNumber(orderNumber);
+            DeliveryOrder order = orderService.findByOrderNumber(orderNumber);
             if (order == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -103,7 +103,7 @@ public class DeliveryController {
     @GetMapping("/{orderNumber}/delivery-options")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDeliveryOptions(@PathVariable String orderNumber) {
         try {
-            Order order = orderService.findByOrderNumber(orderNumber);
+            DeliveryOrder order = orderService.findByOrderNumber(orderNumber);
             if (order == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -133,12 +133,12 @@ public class DeliveryController {
                     .body(ApiResponse.error("配送选项ID不能为空", "MISSING_OPTION_ID"));
             }
             
-            Order order = orderService.selectDeliveryOption(orderNumber, selectedOptionId);
+            DeliveryOrder order = orderService.selectDeliveryOption(orderNumber, selectedOptionId);
             
             Map<String, Object> response = new HashMap<>();
             response.put("orderId", orderNumber);
             response.put("selectedOption", selectedOptionId);
-            response.put("totalCost", order.getTotalCost());
+            response.put("totalCost", 12.50); // Default cost for now
             response.put("status", order.getStatus().toString().toLowerCase());
             
             return ResponseEntity.ok(ApiResponse.success("配送方案已选择", response));
@@ -155,7 +155,7 @@ public class DeliveryController {
     @GetMapping("/{orderNumber}/status")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getOrderStatus(@PathVariable String orderNumber) {
         try {
-            Order order = orderService.findByOrderNumber(orderNumber);
+            DeliveryOrder order = orderService.findByOrderNumber(orderNumber);
             if (order == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -201,7 +201,7 @@ public class DeliveryController {
     @GetMapping("/tracking/{orderNumber}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getTrackingInfo(@PathVariable String orderNumber) {
         try {
-            Order order = orderService.findByOrderNumber(orderNumber);
+            DeliveryOrder order = orderService.findByOrderNumber(orderNumber);
             if (order == null) {
                 return ResponseEntity.notFound().build();
             }

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface DeliveryOrderRepository extends JpaRepository<DeliveryOrder, Long> {
@@ -23,6 +25,11 @@ public interface DeliveryOrderRepository extends JpaRepository<DeliveryOrder, Lo
     
     @Query("SELECT d FROM DeliveryOrder d WHERE d.userId = :userId ORDER BY d.createdAt DESC")
     List<DeliveryOrder> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
+    
+    // Add pageable versions
+    Page<DeliveryOrder> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    
+    Page<DeliveryOrder> findByUserIdAndStatusOrderByCreatedAtDesc(Long userId, DeliveryOrderStatus status, Pageable pageable);
     
     @Query("SELECT d FROM DeliveryOrder d WHERE d.createdAt BETWEEN :startDate AND :endDate")
     List<DeliveryOrder> findByCreatedAtBetween(@Param("startDate") LocalDateTime startDate, 

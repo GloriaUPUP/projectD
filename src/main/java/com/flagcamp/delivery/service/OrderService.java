@@ -2,9 +2,9 @@ package com.flagcamp.delivery.service;
 
 import com.flagcamp.delivery.dto.order.CreateOrderRequest;
 import com.flagcamp.delivery.entity.*;
-import com.flagcamp.delivery.repository.OrderRepository;
-import com.flagcamp.delivery.repository.OrderStatusHistoryRepository;
+import com.flagcamp.delivery.repository.DeliveryOrderRepository;
 import com.flagcamp.delivery.repository.UserRepository;
+import com.flagcamp.delivery.repository.AddressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,97 +22,118 @@ import java.util.Map;
 public class OrderService {
     
     @Autowired
-    private OrderRepository orderRepository;
+    private DeliveryOrderRepository deliveryOrderRepository;
     
     @Autowired
     private UserRepository userRepository;
     
     @Autowired
-    private OrderStatusHistoryRepository statusHistoryRepository;
+    private AddressRepository addressRepository;
     
-    public Order createOrder(CreateOrderRequest request, Long userId) {
+    public DeliveryOrder createOrder(CreateOrderRequest request, Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
-        Order order = new Order();
-        
-        // Set pickup information
-        order.setPickupAddress(request.getPickupInfo().getAddress());
-        order.setPickupContactName(request.getPickupInfo().getContactName());
-        order.setPickupContactPhone(request.getPickupInfo().getContactPhone());
-        order.setPickupInstructions(request.getPickupInfo().getInstructions());
-        
-        // Set delivery information
-        order.setDeliveryAddress(request.getDeliveryInfo().getAddress());
-        order.setDeliveryContactName(request.getDeliveryInfo().getContactName());
-        order.setDeliveryContactPhone(request.getDeliveryInfo().getContactPhone());
-        order.setDeliveryInstructions(request.getDeliveryInfo().getInstructions());
-        
-        // Set package information
-        order.setPackageWeight(request.getPackageInfo().getWeight());
-        order.setPackageType(request.getPackageInfo().getType());
-        order.setPackageValue(request.getPackageInfo().getValue());
-        order.setPackageDescription(request.getPackageInfo().getDescription());
-        
-        // Set preferences
-        if (request.getPreferences() != null) {
-            order.setRequestedPickupTime(request.getPreferences().getPickupTime());
-        }
-        
-        order.setUser(user);
-        order.setStatus(OrderStatus.PENDING_OPTIONS);
-        
-        order = orderRepository.save(order);
-        
-        // Create initial status history
-        OrderStatusHistory statusHistory = new OrderStatusHistory(
-            OrderStatus.PENDING_OPTIONS,
-            "订单已创建",
-            order
+        // Find or create pickup address
+        Long pickupAddressId = findOrCreateAddress(
+            request.getPickupInfo().getAddress(),
+            request.getPickupInfo().getContactName(),
+            userId
         );
-        statusHistoryRepository.save(statusHistory);
         
-        return order;
+        // Find or create delivery address  
+        Long deliveryAddressId = findOrCreateAddress(
+            request.getDeliveryInfo().getAddress(),
+            request.getDeliveryInfo().getContactName(),
+            userId
+        );
+        
+        DeliveryOrder order = new DeliveryOrder();
+        order.setUserId(userId);
+        order.setPickupAddressId(pickupAddressId);
+        order.setDropoffAddressId(deliveryAddressId);
+        order.setItemDescription(request.getPackageInfo().getDescription());
+        order.setItemWeightKg(BigDecimal.valueOf(request.getPackageInfo().getWeight()));
+        order.setStatus(DeliveryOrderStatus.PENDING_PAYMENT);
+        
+        return deliveryOrderRepository.save(order);
     }
     
-    public Page<Order> getOrdersHistory(Long userId, String status, Pageable pageable) {
-        OrderStatus orderStatus = null;
+    private Long findOrCreateAddress(String addressText, String contactName, Long userId) {
+        // Try to find existing address
+        List<Address> existingAddresses = addressRepository.findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId);
+        for (Address addr : existingAddresses) {
+            if (addr.getAddress().contains(addressText.split(",")[0])) {
+                return addr.getId();
+            }
+        }
+        
+        // Create new address if not found
+        Address newAddress = new Address();
+        newAddress.setLabel(contactName + "'s Address");
+        newAddress.setAddress(addressText);
+        newAddress.setCity("Default City");
+        newAddress.setPostalCode("00000");
+        newAddress.setPhone("0000000000");
+        newAddress.setUser(userRepository.findById(userId).orElse(null));
+        newAddress.setDefault(false);
+        
+        Address saved = addressRepository.save(newAddress);
+        return saved.getId();
+    }
+    
+    public Page<DeliveryOrder> getOrdersHistory(Long userId, String status, Pageable pageable) {
+        DeliveryOrderStatus orderStatus = null;
         if (status != null && !status.trim().isEmpty()) {
             try {
-                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+                orderStatus = DeliveryOrderStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException e) {
                 // Invalid status, ignore
             }
         }
         
-        return orderRepository.findOrdersByUserAndStatus(userId, orderStatus, pageable);
+        if (orderStatus != null) {
+            return deliveryOrderRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, orderStatus, pageable);
+        } else {
+            return deliveryOrderRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        }
     }
     
-    public Order findByOrderNumber(String orderNumber) {
-        return orderRepository.findByOrderNumber(orderNumber).orElse(null);
+    public DeliveryOrder findByOrderNumber(String orderNumber) {
+        // For DeliveryOrder, we'll use ID as order number
+        try {
+            Long orderId = Long.parseLong(orderNumber.replace("ORD", ""));
+            return deliveryOrderRepository.findById(orderId).orElse(null);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
     
-    public List<Map<String, Object>> convertToOrderSummaryList(List<Order> orders) {
+    public List<Map<String, Object>> convertToOrderSummaryList(List<DeliveryOrder> orders) {
         List<Map<String, Object>> summaryList = new ArrayList<>();
         
-        for (Order order : orders) {
+        for (DeliveryOrder order : orders) {
             Map<String, Object> summary = new HashMap<>();
-            summary.put("orderId", order.getOrderNumber());
+            summary.put("orderId", "ORD" + order.getId());
             summary.put("createdAt", order.getCreatedAt());
             summary.put("status", order.getStatus().toString().toLowerCase());
             
+            // Get pickup address
+            Address pickupAddr = addressRepository.findById(order.getPickupAddressId()).orElse(null);
             Map<String, Object> pickup = new HashMap<>();
-            pickup.put("address", order.getPickupAddress());
-            pickup.put("time", order.getActualPickupTime() != null ? order.getActualPickupTime() : order.getCreatedAt());
+            pickup.put("address", pickupAddr != null ? pickupAddr.getAddress() : "Unknown");
+            pickup.put("time", order.getCreatedAt());
             summary.put("pickup", pickup);
             
+            // Get delivery address
+            Address deliveryAddr = addressRepository.findById(order.getDropoffAddressId()).orElse(null);
             Map<String, Object> delivery = new HashMap<>();
-            delivery.put("address", order.getDeliveryAddress());
-            delivery.put("time", order.getActualDeliveryTime() != null ? order.getActualDeliveryTime() : order.getCreatedAt());
+            delivery.put("address", deliveryAddr != null ? deliveryAddr.getAddress() : "Unknown");
+            delivery.put("time", order.getCreatedAt());
             summary.put("delivery", delivery);
             
-            summary.put("cost", order.getTotalCost() != null ? order.getTotalCost() : BigDecimal.ZERO);
-            summary.put("deliveryMethod", order.getDeliveryType() != null ? order.getDeliveryType().toString().toLowerCase() : "pending");
+            summary.put("cost", BigDecimal.valueOf(12.50)); // Default cost
+            summary.put("deliveryMethod", "robot"); // Default method
             
             summaryList.add(summary);
         }
@@ -121,46 +141,44 @@ public class OrderService {
         return summaryList;
     }
     
-    public Map<String, Object> convertToOrderDetails(Order order) {
+    public Map<String, Object> convertToOrderDetails(DeliveryOrder order) {
         Map<String, Object> details = new HashMap<>();
         
-        details.put("orderId", order.getOrderNumber());
+        details.put("orderId", "ORD" + order.getId());
         details.put("status", order.getStatus().toString().toLowerCase());
         details.put("createdAt", order.getCreatedAt());
-        details.put("completedAt", order.getActualDeliveryTime());
+        details.put("completedAt", null);
         
+        // Get pickup address
+        Address pickupAddr = addressRepository.findById(order.getPickupAddressId()).orElse(null);
         Map<String, Object> pickup = new HashMap<>();
-        pickup.put("address", order.getPickupAddress());
-        pickup.put("contactName", order.getPickupContactName());
-        pickup.put("actualTime", order.getActualPickupTime());
+        pickup.put("address", pickupAddr != null ? pickupAddr.getAddress() : "Unknown");
+        pickup.put("contactName", pickupAddr != null ? pickupAddr.getLabel() : "Unknown");
+        pickup.put("actualTime", null);
         details.put("pickup", pickup);
         
+        // Get delivery address
+        Address deliveryAddr = addressRepository.findById(order.getDropoffAddressId()).orElse(null);
         Map<String, Object> delivery = new HashMap<>();
-        delivery.put("address", order.getDeliveryAddress());
-        delivery.put("contactName", order.getDeliveryContactName());
-        delivery.put("actualTime", order.getActualDeliveryTime());
+        delivery.put("address", deliveryAddr != null ? deliveryAddr.getAddress() : "Unknown");
+        delivery.put("contactName", deliveryAddr != null ? deliveryAddr.getLabel() : "Unknown");
+        delivery.put("actualTime", null);
         details.put("delivery", delivery);
         
         Map<String, Object> packageInfo = new HashMap<>();
-        packageInfo.put("weight", order.getPackageWeight());
-        packageInfo.put("type", order.getPackageType());
-        packageInfo.put("value", order.getPackageValue());
+        packageInfo.put("weight", order.getItemWeightKg());
+        packageInfo.put("type", "general");
+        packageInfo.put("value", BigDecimal.valueOf(100));
+        packageInfo.put("description", order.getItemDescription());
         details.put("package", packageInfo);
         
-        details.put("cost", order.getTotalCost());
-        details.put("deliveryMethod", order.getDeliveryType() != null ? order.getDeliveryType().toString().toLowerCase() : null);
-        
-        if (order.getAssignedDeviceId() != null) {
-            Map<String, Object> deviceUsed = new HashMap<>();
-            deviceUsed.put("deviceId", order.getAssignedDeviceId());
-            deviceUsed.put("name", "配送" + (order.getDeliveryType() == DeliveryType.ROBOT ? "机器人" : "无人机") + "#1");
-            details.put("deviceUsed", deviceUsed);
-        }
+        details.put("cost", BigDecimal.valueOf(12.50));
+        details.put("deliveryMethod", "robot");
         
         return details;
     }
     
-    public List<Map<String, Object>> getAvailableDeliveryOptions(Order order) {
+    public List<Map<String, Object>> getAvailableDeliveryOptions(DeliveryOrder order) {
         return getStandardDeliveryOptions();
     }
     
@@ -191,98 +209,54 @@ public class OrderService {
         return options;
     }
     
-    public Order selectDeliveryOption(String orderNumber, String selectedOptionId) {
-        Order order = orderRepository.findByOrderNumber(orderNumber)
-            .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-        
-        if (!order.getStatus().equals(OrderStatus.PENDING_OPTIONS)) {
-            throw new IllegalArgumentException("Order is not in pending options state");
+    public DeliveryOrder selectDeliveryOption(String orderNumber, String selectedOptionId) {
+        DeliveryOrder order = findByOrderNumber(orderNumber);
+        if (order == null) {
+            throw new IllegalArgumentException("Order not found");
         }
         
-        // Set delivery type and pricing based on selected option
-        switch (selectedOptionId) {
-            case "robot_standard":
-                order.setDeliveryType(DeliveryType.ROBOT);
-                order.setTotalCost(BigDecimal.valueOf(12.50));
-                break;
-            case "drone_express":
-                order.setDeliveryType(DeliveryType.DRONE);
-                order.setTotalCost(BigDecimal.valueOf(18.00));
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid delivery option");
+        if (!order.getStatus().equals(DeliveryOrderStatus.PENDING_PAYMENT)) {
+            throw new IllegalArgumentException("Order is not in pending payment state");
         }
         
-        order.setStatus(OrderStatus.AWAITING_PAYMENT);
-        order = orderRepository.save(order);
-        
-        // Create status history
-        OrderStatusHistory statusHistory = new OrderStatusHistory(
-            OrderStatus.AWAITING_PAYMENT,
-            "配送方案已选择，等待支付",
-            order
-        );
-        statusHistoryRepository.save(statusHistory);
-        
-        return order;
+        // Update status to PAID (next step after selecting option)
+        order.setStatus(DeliveryOrderStatus.PAID);
+        return deliveryOrderRepository.save(order);
     }
     
-    public Map<String, Object> getOrderStatusInfo(Order order) {
+    public Map<String, Object> getOrderStatusInfo(DeliveryOrder order) {
         Map<String, Object> statusInfo = new HashMap<>();
         
-        statusInfo.put("orderId", order.getOrderNumber());
+        statusInfo.put("orderId", "ORD" + order.getId());
         statusInfo.put("currentStatus", order.getStatus().toString().toLowerCase());
         
-        // Get status history
-        List<OrderStatusHistory> history = statusHistoryRepository.findByOrderIdOrderByTimestampAsc(order.getId());
+        // Mock status history
         List<Map<String, Object>> statusHistory = new ArrayList<>();
-        
-        for (OrderStatusHistory historyItem : history) {
-            Map<String, Object> historyMap = new HashMap<>();
-            historyMap.put("status", historyItem.getStatus().toString().toLowerCase());
-            historyMap.put("timestamp", historyItem.getTimestamp());
-            historyMap.put("description", historyItem.getDescription());
-            statusHistory.add(historyMap);
-        }
+        Map<String, Object> historyItem = new HashMap<>();
+        historyItem.put("status", "created");
+        historyItem.put("timestamp", order.getCreatedAt());
+        historyItem.put("description", "订单已创建");
+        statusHistory.add(historyItem);
         statusInfo.put("statusHistory", statusHistory);
         
-        // Mock current location if in transit
-        if (order.getStatus().equals(OrderStatus.IN_TRANSIT)) {
-            Map<String, Object> currentLocation = new HashMap<>();
-            currentLocation.put("lat", 37.7749);
-            currentLocation.put("lng", -122.4194);
-            currentLocation.put("address", "Market St & 5th St");
-            statusInfo.put("currentLocation", currentLocation);
-        }
-        
-        statusInfo.put("estimatedDelivery", order.getEstimatedDeliveryTime() != null ? 
-            order.getEstimatedDeliveryTime() : LocalDateTime.now().plusHours(1));
-        
-        if (order.getAssignedDeviceId() != null) {
-            Map<String, Object> assignedDevice = new HashMap<>();
-            assignedDevice.put("deviceId", order.getAssignedDeviceId());
-            assignedDevice.put("type", order.getDeliveryType().toString().toLowerCase());
-            assignedDevice.put("name", "配送" + (order.getDeliveryType() == DeliveryType.ROBOT ? "机器人" : "无人机") + "#1");
-            statusInfo.put("assignedDevice", assignedDevice);
-        }
+        statusInfo.put("estimatedDelivery", order.getCreatedAt().plusHours(1));
         
         return statusInfo;
     }
     
     public List<Map<String, Object>> getDeliveryRecommendations(Map<String, Object> orderData) {
-        // Mock recommendations based on order data
         List<Map<String, Object>> recommendations = new ArrayList<>();
         
-        Map<String, Object> recommendation1 = new HashMap<>();
-        recommendation1.put("type", "robot");
-        recommendation1.put("reason", "最佳性价比选择");
-        recommendation1.put("confidence", 0.9);
-        recommendations.add(recommendation1);
+        Map<String, Object> recommendation = new HashMap<>();
+        recommendation.put("type", "robot");
+        recommendation.put("reason", "最佳性价比选择");
+        recommendation.put("confidence", 0.9);
+        recommendations.add(recommendation);
         
         return recommendations;
     }
     
-    public Map<String, Object> getTrackingInfo(Order order) {
-        return getOrderStatusInfo(order); // For now, tracking info is same as status info
+    public Map<String, Object> getTrackingInfo(DeliveryOrder order) {
+        return getOrderStatusInfo(order);
     }
 }
