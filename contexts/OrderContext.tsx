@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState } from 'react';
+import { apiService } from '../services/api';
 
 export interface Address {
   id: string;
   name: string;
   address: string;
-  city: string;
-  postalCode: string;
   phone: string;
 }
 
@@ -75,20 +74,67 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const confirmOrder = async () => {
+    console.log('confirmOrder called with currentOrder:', currentOrder);
+    console.log('Checking conditions:');
+    console.log('- sender exists:', !!currentOrder.sender, currentOrder.sender);
+    console.log('- recipient exists:', !!currentOrder.recipient, currentOrder.recipient);  
+    console.log('- parcel exists:', !!currentOrder.parcel, currentOrder.parcel);
+    console.log('- deliveryOption exists:', !!currentOrder.deliveryOption, currentOrder.deliveryOption);
+    
     if (currentOrder.sender && currentOrder.recipient && currentOrder.parcel && currentOrder.deliveryOption) {
-      const newOrder: Order = {
-        id: Date.now().toString(),
-        sender: currentOrder.sender,
-        recipient: currentOrder.recipient,
-        parcel: currentOrder.parcel,
-        deliveryOption: currentOrder.deliveryOption,
-        status: 'confirmed',
-        createdAt: new Date(),
-        estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-      };
-      
-      setOrders(prev => [newOrder, ...prev]);
-      setCurrentOrder({});
+      try {
+        // Format order data for backend API (using camelCase field names)
+        const orderData = {
+          pickupInfo: {
+            address: currentOrder.sender.address,
+            contactName: currentOrder.sender.name,
+            contactPhone: currentOrder.sender.phone,
+            instructions: 'Ring doorbell'
+          },
+          deliveryInfo: {
+            address: currentOrder.recipient.address,
+            contactName: currentOrder.recipient.name,  
+            contactPhone: currentOrder.recipient.phone,
+            instructions: 'Leave at door'
+          },
+          packageInfo: {
+            weight: Number(currentOrder.parcel.weight),
+            type: 'package',
+            value: Number(currentOrder.parcel.value),
+            description: currentOrder.parcel.description || 'Package delivery'
+          }
+        };
+
+        console.log('Sending order data to backend:', orderData);
+        
+        // Call backend API to create order
+        const response = await apiService.createOrder(orderData);
+        
+        if (response.success) {
+          // Create local order object for UI
+          const newOrder: Order = {
+            id: response.data?.orderId || Date.now().toString(),
+            sender: currentOrder.sender,
+            recipient: currentOrder.recipient,
+            parcel: currentOrder.parcel,
+            deliveryOption: currentOrder.deliveryOption,
+            status: 'confirmed',
+            createdAt: new Date(),
+            estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          };
+          
+          setOrders(prev => [newOrder, ...prev]);
+          setCurrentOrder({});
+        } else {
+          throw new Error(response.message || 'Failed to create order');
+        }
+      } catch (error) {
+        console.error('Order creation failed:', error);
+        throw error;
+      }
+    } else {
+      console.error('Order confirmation failed: Missing required order information');
+      throw new Error('Missing required order information. Please complete all steps.');
     }
   };
 

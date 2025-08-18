@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useOrder } from '../../contexts/OrderContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Button, Input, Card } from '../../components';
+import { Button, Input, Card, AddressAutocomplete } from '../../components';
 import type { Address, ParcelInfo } from '../../contexts/OrderContext';
 
 interface OrderStep1ScreenProps {
@@ -27,13 +27,11 @@ const OrderStep1Screen: React.FC<OrderStep1ScreenProps> = ({ navigation }) => {
     // Validate sender
     if (!sender.name) newErrors.senderName = 'Sender name is required';
     if (!sender.address) newErrors.senderAddress = 'Sender address is required';
-    if (!sender.city) newErrors.senderCity = 'Sender city is required';
     if (!sender.phone) newErrors.senderPhone = 'Sender phone is required';
     
     // Validate recipient
     if (!recipient.name) newErrors.recipientName = 'Recipient name is required';
     if (!recipient.address) newErrors.recipientAddress = 'Recipient address is required';
-    if (!recipient.city) newErrors.recipientCity = 'Recipient city is required';
     if (!recipient.phone) newErrors.recipientPhone = 'Recipient phone is required';
     
     // Validate parcel
@@ -63,8 +61,6 @@ const OrderStep1Screen: React.FC<OrderStep1ScreenProps> = ({ navigation }) => {
       id: sender.id || Date.now().toString(),
       name: sender.name || '',
       address: sender.address || '',
-      city: sender.city || '',
-      postalCode: sender.postalCode || '',
       phone: sender.phone || '',
     };
 
@@ -72,8 +68,6 @@ const OrderStep1Screen: React.FC<OrderStep1ScreenProps> = ({ navigation }) => {
       id: recipient.id || Date.now().toString(),
       name: recipient.name || '',
       address: recipient.address || '',
-      city: recipient.city || '',
-      postalCode: recipient.postalCode || '',
       phone: recipient.phone || '',
     };
 
@@ -93,6 +87,7 @@ const OrderStep1Screen: React.FC<OrderStep1ScreenProps> = ({ navigation }) => {
   const updateRecipient = (field: string) => (value: string) => {
     setRecipient(prev => ({ ...prev, [field]: value }));
   };
+
 
   const updateParcel = (field: string) => (value: string | boolean) => {
     if (field === 'dimensions') {
@@ -118,24 +113,13 @@ const OrderStep1Screen: React.FC<OrderStep1ScreenProps> = ({ navigation }) => {
             error={errors.senderName}
             required
           />
-          <Input
+          <AddressAutocomplete
             label="Address"
             value={sender.address || ''}
             onChangeText={updateSender('address')}
             error={errors.senderAddress}
             required
-          />
-          <Input
-            label="City"
-            value={sender.city || ''}
-            onChangeText={updateSender('city')}
-            error={errors.senderCity}
-            required
-          />
-          <Input
-            label="Postal Code"
-            value={sender.postalCode || ''}
-            onChangeText={updateSender('postalCode')}
+            placeholder="Enter pickup address"
           />
           <Input
             label="Phone"
@@ -156,24 +140,13 @@ const OrderStep1Screen: React.FC<OrderStep1ScreenProps> = ({ navigation }) => {
             error={errors.recipientName}
             required
           />
-          <Input
+          <AddressAutocomplete
             label="Address"
             value={recipient.address || ''}
             onChangeText={updateRecipient('address')}
             error={errors.recipientAddress}
             required
-          />
-          <Input
-            label="City"
-            value={recipient.city || ''}
-            onChangeText={updateRecipient('city')}
-            error={errors.recipientCity}
-            required
-          />
-          <Input
-            label="Postal Code"
-            value={recipient.postalCode || ''}
-            onChangeText={updateRecipient('postalCode')}
+            placeholder="Enter delivery address"
           />
           <Input
             label="Phone"

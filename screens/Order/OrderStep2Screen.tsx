@@ -16,27 +16,68 @@ const OrderStep2Screen: React.FC<OrderStep2ScreenProps> = ({ navigation }) => {
   const { t } = useLanguage();
   const [selectedOption, setSelectedOption] = useState<any>(null);
   const [deliveryOptions, setDeliveryOptions] = useState<any[]>([]);
-  const [distance, setDistance] = useState(12.5); // Mock distance in km
+  const [distance, setDistance] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentOrder.sender && currentOrder.recipient && currentOrder.parcel) {
-      // Calculate distance between sender and recipient (mock calculation)
-      const mockDistance = Math.random() * 20 + 5; // 5-25 km
-      setDistance(mockDistance);
+      calculateRealPricing();
+    }
+  }, [currentOrder]);
 
-      // Generate delivery options with dynamic pricing
+  const calculateRealPricing = async () => {
+    if (!currentOrder.sender?.address || !currentOrder.recipient?.address) {
+      setError('Sender and recipient addresses are required');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Use real addresses for pricing calculation
+      const originAddress = currentOrder.sender.address;
+      const destinationAddress = currentOrder.recipient.address;
+      
+      console.log('Calculating real pricing for:', { originAddress, destinationAddress });
+
       const pricingFactors = {
-        distance: mockDistance,
         weight: currentOrder.parcel.weight || 1,
         packageValue: currentOrder.parcel.value || 100,
         deliveryTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
         orderCount: 1, // Could be fetched from user's order history
       };
 
-      const options = PricingEngine.getAllDeliveryOptions(pricingFactors);
+      // Use the new real address pricing method
+      const options = await PricingEngine.getAllDeliveryOptionsWithRealAddresses(
+        originAddress,
+        destinationAddress,
+        pricingFactors
+      );
+
+      if (options.length === 0) {
+        setError('No delivery options available for these addresses. Please check that both addresses are in our service area (San Francisco, Daly City, or San Bruno).');
+        setDeliveryOptions([]);
+        return;
+      }
+
+      // Extract real distance from the first option's route data
+      if (options[0]?.pricing?.routeData?.distanceValue) {
+        setDistance(options[0].pricing.routeData.distanceValue / 1000); // Convert to km
+      }
+
       setDeliveryOptions(options);
+      console.log('Real pricing calculated successfully:', options);
+
+    } catch (error) {
+      console.error('Failed to calculate real pricing:', error);
+      setError(`Failed to calculate pricing: ${error.message || 'Please check addresses are valid and in our service area (San Francisco, Daly City, or San Bruno)'}`);
+      setDeliveryOptions([]);
+    } finally {
+      setLoading(false);
     }
-  }, [currentOrder]);
+  };
 
   const deliveryOptionsLegacy: DeliveryOption[] = deliveryOptions.map(option => ({
     id: option.id,
@@ -91,7 +132,28 @@ const OrderStep2Screen: React.FC<OrderStep2ScreenProps> = ({ navigation }) => {
 
         <Text style={styles.sectionTitle}>Available Delivery Options</Text>
 
-        {deliveryOptionsLegacy.map((option) => (
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Calculating real-time pricing...</Text>
+          </View>
+        )}
+
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={calculateRealPricing} style={styles.retryButton}>
+              <Text style={styles.retryText}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!loading && !error && deliveryOptions.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No delivery options available</Text>
+          </View>
+        )}
+
+        {!loading && !error && deliveryOptionsLegacy.map((option) => (
           <TouchableOpacity
             key={option.id}
             style={[
@@ -308,6 +370,54 @@ const styles = StyleSheet.create({
   continueButton: {
     flex: 2,
     marginLeft: 8,
+  },
+  loadingContainer: {
+    backgroundColor: '#F0F8FF',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  errorContainer: {
+    backgroundColor: '#FFE5E5',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#FF3B30',
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignSelf: 'flex-start',
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666666',
   },
 });
 

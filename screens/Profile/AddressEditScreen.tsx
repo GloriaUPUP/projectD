@@ -3,10 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, Card, LoadingSpinner } from '../../components';
 import { apiService } from '../../services/api';
+import { theme } from '../../utils/theme';
 
 interface Address {
   id: string;
-  name: string;
+  label: string;
   address: string;
   city: string;
   postalCode: string;
@@ -34,11 +35,46 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
     try {
       setLoading(true);
       const response = await apiService.getAddresses();
-      if (response.success && response.data) {
-        setAddresses(response.data);
+      console.log('Address API Response:', response);
+      
+      if (response.success) {
+        // Handle different response structures
+        let addressData = response.data;
+        
+        // Backend returns data in format: {"data": {"data": [...], "success": true}, "success": true}
+        if (addressData && addressData.data && Array.isArray(addressData.data)) {
+          addressData = addressData.data;
+        } else if (addressData && typeof addressData === 'object' && !Array.isArray(addressData)) {
+          if (addressData.addresses && Array.isArray(addressData.addresses)) {
+            addressData = addressData.addresses;
+          }
+        }
+        
+        // Ensure we have an array
+        if (Array.isArray(addressData)) {
+          // Map backend response to frontend format
+          const mappedAddresses = addressData.map((addr: any) => ({
+            id: addr.id?.toString(),
+            label: addr.label,
+            address: addr.address,
+            city: addr.city,
+            postalCode: addr.postalCode,
+            phone: addr.phone,
+            isDefault: addr.default || false
+          }));
+          setAddresses(mappedAddresses);
+        } else {
+          console.warn('Address data is not an array:', addressData);
+          setAddresses([]);
+        }
+      } else {
+        console.error('API call failed:', response.error);
+        setAddresses([]);
       }
     } catch (error) {
+      console.error('Error loading addresses:', error);
       Alert.alert('Error', 'Failed to load addresses');
+      setAddresses([]);
     } finally {
       setLoading(false);
     }
@@ -47,7 +83,7 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
   const validateAddress = () => {
     const newErrors: { [key: string]: string } = {};
     
-    if (!newAddress.name) newErrors.name = 'Address name is required';
+    if (!newAddress.label) newErrors.label = 'Address name is required';
     if (!newAddress.address) newErrors.address = 'Address is required';
     if (!newAddress.city) newErrors.city = 'City is required';
     if (!newAddress.phone) newErrors.phone = 'Phone is required';
@@ -62,7 +98,7 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
     try {
       setActionLoading('add');
       const addressData = {
-        name: newAddress.name || '',
+        name: newAddress.label || '',
         address: newAddress.address || '',
         city: newAddress.city || '',
         postalCode: newAddress.postalCode || '',
@@ -71,7 +107,17 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
       
       const response = await apiService.addAddress(addressData);
       if (response.success && response.data) {
-        setAddresses([...addresses, response.data]);
+        // Map the new address response to frontend format
+        const newAddr = {
+          id: response.data.id?.toString(),
+          label: response.data.label,
+          address: response.data.address,
+          city: response.data.city,
+          postalCode: response.data.postalCode,
+          phone: response.data.phone,
+          isDefault: response.data.default || false
+        };
+        setAddresses([...addresses, newAddr]);
         setNewAddress({});
         setShowAddForm(false);
         setErrors({});
@@ -159,9 +205,9 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
             <Text style={styles.formTitle}>Add New Address</Text>
             <Input
               label="Address Name"
-              value={newAddress.name || ''}
-              onChangeText={(value) => setNewAddress({...newAddress, name: value})}
-              error={errors.name}
+              value={newAddress.label || ''}
+              onChangeText={(value) => setNewAddress({...newAddress, label: value})}
+              error={errors.label}
               placeholder="e.g., Home, Office"
               required
             />
@@ -213,10 +259,10 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
           </Card>
         )}
 
-        {addresses.map((address) => (
+        {addresses && addresses.length > 0 ? addresses.map((address) => (
           <Card key={address.id} style={styles.addressCard}>
             <View style={styles.addressHeader}>
-              <Text style={styles.addressName}>{address.name}</Text>
+              <Text style={styles.addressName}>{address.label}</Text>
               {address.isDefault && (
                 <View style={styles.defaultBadge}>
                   <Text style={styles.defaultText}>Default</Text>
@@ -256,7 +302,12 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
               </TouchableOpacity>
             </View>
           </Card>
-        ))}
+        )) : (
+          <Card style={styles.emptyCard}>
+            <Text style={styles.emptyText}>No addresses found</Text>
+            <Text style={styles.emptySubtext}>Tap the + Add button to add your first address</Text>
+          </Card>
+        )}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -266,46 +317,46 @@ const AddressEditScreen: React.FC<AddressEditScreenProps> = ({ navigation }) => 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.colors.background.primary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-    backgroundColor: '#FFFFFF',
+    borderBottomColor: theme.colors.border.light,
+    backgroundColor: theme.colors.background.primary,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   addButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#007AFF',
-    borderRadius: 16,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.spacing.lg,
   },
   addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: theme.colors.background.primary,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
   },
   addForm: {
     marginBottom: 16,
   },
   formTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 16,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.lg,
   },
   formButtons: {
     flexDirection: 'row',
@@ -329,45 +380,45 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   addressName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   defaultBadge: {
-    backgroundColor: '#34C759',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.md,
   },
   defaultText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.background.primary,
   },
   addressText: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
     marginBottom: 2,
   },
   addressActions: {
     flexDirection: 'row',
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: theme.colors.border.light,
   },
   actionButton: {
-    marginRight: 16,
+    marginRight: theme.spacing.lg,
   },
   setDefaultText: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   deleteText: {
-    fontSize: 14,
-    color: '#FF3B30',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.accent.error,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   loadingContainer: {
     flex: 1,
@@ -376,12 +427,27 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666666',
+    marginTop: theme.spacing.md,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  emptyCard: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyText: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
+  },
+  emptySubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    textAlign: 'center',
   },
 });
 

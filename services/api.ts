@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8086/api';
+const API_BASE_URL = 'http://192.168.1.88:8086/api';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -159,7 +159,7 @@ const mockDeliveryOptions: DeliveryOption[] = [
 ];
 
 class ApiService {
-  private useMockData = true; // Enable mock data for MVP
+  private useMockData = false; // Disable mock data to use real backend
 
   private async mockDelay(ms: number = 500): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -688,7 +688,14 @@ class ApiService {
   async register(email: string, password: string, firstName: string, lastName: string, phone: string, address: string) {
     return this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password, firstName, lastName, phone, address }),
+      body: JSON.stringify({ 
+        email, 
+        password, 
+        firstName, 
+        lastName, 
+        phone, 
+        address 
+      }),
     });
   }
 
@@ -790,7 +797,7 @@ class ApiService {
 
   // Payment APIs
   async getPaymentMethods() {
-    return this.request('/payments/methods');
+    return this.request('/payment/methods');
   }
 
   async processPayment(paymentData: {
@@ -799,7 +806,7 @@ class ApiService {
     paymentInfo: any;
     amount: number;
   }) {
-    return this.request('/payments/process', {
+    return this.request('/payment/process', {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
@@ -807,16 +814,28 @@ class ApiService {
 
   // User Settings APIs
   async getUserSettings() {
-    return this.request('/users/settings');
+    return this.request('/auth/settings');
   }
 
   async updateUserSettings(settingsData: {
     profile?: any;
     preferences?: any;
   }) {
-    return this.request('/users/settings', {
+    return this.request('/auth/settings', {
       method: 'PUT',
       body: JSON.stringify(settingsData),
+    });
+  }
+
+  // User Profile APIs  
+  async getUserProfile() {
+    return this.request('/auth/profile');
+  }
+
+  async updateUserProfile(profileData: any) {
+    return this.request('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
     });
   }
 
@@ -830,9 +849,20 @@ class ApiService {
   }
 
   async addAddress(addressData: any) {
+    // Map frontend fields to backend expected fields
+    const backendData = {
+      label: addressData.name || addressData.label || 'Home',
+      address: addressData.address,
+      city: addressData.city,
+      postalCode: addressData.postalCode,
+      country: addressData.country || 'US',
+      phone: addressData.phone,
+      isDefault: addressData.isDefault || false
+    };
+    
     return this.request('/addresses', {
       method: 'POST',
-      body: JSON.stringify(addressData),
+      body: JSON.stringify(backendData),
     });
   }
 
@@ -870,7 +900,103 @@ class ApiService {
   async getAddressSuggestions(partialAddress: string) {
     return this.request(`/addresses/suggestions?q=${encodeURIComponent(partialAddress)}`);
   }
+
+  // Support APIs (connecting to backend)
+  async createSupportTicket(ticketData: any) {
+    return this.request('/support/tickets', {
+      method: 'POST',
+      body: JSON.stringify(ticketData),
+    });
+  }
+
+  async getFAQList() {
+    return this.request('/support/faq');
+  }
+
+  // Route and Maps APIs
+  async calculateRoute(origin: string, destination: string) {
+    const params = new URLSearchParams({
+      origin,
+      destination
+    });
+    return this.request(`/routes/calculate?${params}`);
+  }
+
+  async calculateDistanceMatrix(origins: string[], destinations: string[]) {
+    return this.request('/routes/distance-matrix', {
+      method: 'POST',
+      body: JSON.stringify({
+        origins,
+        destinations
+      }),
+    });
+  }
+
+  async geocodeAddress(address: string) {
+    const params = new URLSearchParams({ address });
+    return this.request(`/routes/geocode?${params}`);
+  }
+
+  async validateServiceArea(address: string) {
+    const params = new URLSearchParams({ address });
+    return this.request(`/routes/validate?${params}`);
+  }
+
+  async getActiveDeliveries(): Promise<ApiResponse<any[]>> {
+    return this.request('/orders/active-deliveries');
+  }
+}
+
+// 创建路径相关的单独API类
+class RouteAPI {
+  private baseUrl = 'http://192.168.1.88:8086/api';
+
+  private async request(endpoint: string, options?: RequestInit) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      ...options,
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async calculateRoute(origin: string, destination: string) {
+    const params = new URLSearchParams({
+      origin,
+      destination
+    });
+    return this.request(`/routes/calculate?${params}`);
+  }
+
+  async calculateDistanceMatrix(origins: string[], destinations: string[]) {
+    return this.request('/routes/distance-matrix', {
+      method: 'POST',
+      body: JSON.stringify({
+        origins,
+        destinations
+      }),
+    });
+  }
+
+  async geocodeAddress(address: string) {
+    const params = new URLSearchParams({ address });
+    return this.request(`/routes/geocode?${params}`);
+  }
+
+  async validateServiceArea(address: string) {
+    const params = new URLSearchParams({ address });
+    return this.request(`/routes/validate?${params}`);
+  }
 }
 
 export const apiService = new ApiService();
+export const routeAPI = new RouteAPI();
 export default apiService;

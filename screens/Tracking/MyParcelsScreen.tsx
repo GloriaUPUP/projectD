@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useOrder } from '../../contexts/OrderContext';
 import { Card } from '../../components';
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../utils/theme';
 
 interface MyParcelsScreenProps {
   navigation: any;
@@ -26,11 +28,43 @@ const MyParcelsScreen: React.FC<MyParcelsScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Parcels</Text>
-        <Text style={styles.subtitle}>{orders.length} total orders</Text>
+        <Text style={styles.title}>My Order</Text>
+        
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search" size={20} color={theme.colors.text.tertiary} />
+            <TextInput 
+              style={styles.searchInput}
+              placeholder="Enter track number"
+              placeholderTextColor="rgba(255, 255, 255, 0.7)"
+            />
+            <TouchableOpacity style={styles.searchButton}>
+              <Ionicons name="scan-outline" size={20} color={theme.colors.background.primary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* Filter Tabs */}
+        <View style={styles.filterTabs}>
+          <TouchableOpacity style={[styles.filterTab, styles.filterTabActive]}>
+            <Text style={styles.filterTabTextActive}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterTab}>
+            <Text style={styles.filterTabText}>Pending</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterTab}>
+            <Text style={styles.filterTabText}>On Process</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterTab}>
+            <Text style={styles.filterTabText}>Delivered</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.content}>
+        <Text style={styles.resultsCount}>{orders.length} Results</Text>
+        
         {orders.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>No orders yet</Text>
@@ -44,18 +78,32 @@ const MyParcelsScreen: React.FC<MyParcelsScreenProps> = ({ navigation }) => {
             >
               <Card style={styles.orderCard}>
                 <View style={styles.orderHeader}>
-                  <Text style={styles.orderId}>Order #{order.id}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-                    <Text style={styles.statusText}>{order.status.toUpperCase()}</Text>
+                  <View style={styles.orderIconContainer}>
+                    <Ionicons name="cube" size={24} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.orderInfo}>
+                    <Text style={styles.orderId}>{order.id}</Text>
+                    <Text style={styles.orderStatus}>
+                      {order.status === 'delivered' ? 'Delivered' : 
+                       order.status === 'pending' ? 'Returned to sender' :
+                       order.status === 'in_transit' ? 'On Process' : 
+                       'Waiting to picked up'}
+                    </Text>
+                  </View>
+                  <View style={[styles.statusBadge, { 
+                    backgroundColor: order.status === 'delivered' ? theme.colors.primary : 
+                                   order.status === 'pending' ? '#FF9800' : 
+                                   order.status === 'in_transit' ? '#2196F3' : 
+                                   theme.colors.text.secondary
+                  }]}>
+                    <Text style={styles.statusText}>
+                      {order.status === 'delivered' ? 'Delivered' : 
+                       order.status === 'pending' ? 'Pending' :
+                       order.status === 'in_transit' ? 'On Process' : 
+                       'Delivered'}
+                    </Text>
                   </View>
                 </View>
-                <Text style={styles.orderRoute}>
-                  {order.sender.city} → {order.recipient.city}
-                </Text>
-                <Text style={styles.orderService}>{order.deliveryOption.name}</Text>
-                <Text style={styles.orderDate}>
-                  {order.createdAt.toLocaleDateString()}
-                </Text>
               </Card>
             </TouchableOpacity>
           ))
@@ -68,29 +116,76 @@ const MyParcelsScreen: React.FC<MyParcelsScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.colors.background.primary,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.lg,
+    backgroundColor: theme.colors.background.primary,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.lg,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
+  searchContainer: {
+    marginBottom: theme.spacing.lg,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.xl,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    gap: theme.spacing.md,
+  },
+  searchInput: {
+    flex: 1,
+    color: theme.colors.background.primary,
+    fontSize: theme.typography.fontSize.base,
+  },
+  searchButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterTabs: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  filterTab: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+  },
+  filterTabActive: {
+    backgroundColor: theme.colors.text.primary,
+  },
+  filterTabText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  filterTabTextActive: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.background.primary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+  },
+  resultsCount: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.lg,
   },
   emptyState: {
     flex: 1,
@@ -110,42 +205,44 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   orderCard: {
-    marginBottom: 12,
+    marginBottom: theme.spacing.lg,
+    padding: theme.spacing.lg,
   },
   orderHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+  },
+  orderIconContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  orderInfo: {
+    flex: 1,
   },
   orderId: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: 2,
+  },
+  orderStatus: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  orderRoute: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 4,
-  },
-  orderService: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginBottom: 4,
-  },
-  orderDate: {
-    fontSize: 12,
-    color: '#999999',
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.background.primary,
   },
 });
 

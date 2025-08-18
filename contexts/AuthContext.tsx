@@ -13,6 +13,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
+  updateProfile: (name: string, email: string, phone?: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -48,7 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (email: string, password: string, name: string) => {
     setLoading(true);
     try {
-      const response = await apiService.register(email, password, name);
+      // Split name into firstName and lastName
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+      
+      const response = await apiService.register(email, password, firstName, lastName, '', '');
       if (response.success && response.data) {
         const userData: User = {
           id: response.data.id || response.data.userId,
@@ -67,6 +73,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (name: string, email: string, phone?: string) => {
+    if (!user) throw new Error('User not logged in');
+    
+    setLoading(true);
+    try {
+      // For now, we'll update locally since we don't have a backend API for profile update
+      // In a real app, you would call: await apiService.updateProfile(name, email, phone);
+      
+      const updatedUser: User = {
+        ...user,
+        name,
+        email,
+        phone
+      };
+      
+      setUser(updatedUser);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
   };
@@ -76,6 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoggedIn: !!user,
     login,
     register,
+    updateProfile,
     logout,
     loading
   };

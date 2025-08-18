@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button, Input, LoadingSpinner } from '../../components';
+import SimpleLogo from '../../assets/simple-logo';
 
 interface LoginScreenProps {
   navigation: any;
@@ -53,6 +54,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <SimpleLogo size={120} />
+          </View>
           <Text style={styles.title}>{t('auth.welcome')}</Text>
           <Text style={styles.subtitle}>{t('auth.loginPrompt')}</Text>
         </View>
@@ -108,6 +112,17 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 48,
+  },
+  logoContainer: {
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   title: {
     fontSize: 32,

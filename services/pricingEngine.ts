@@ -1,3 +1,5 @@
+import { routeAPI } from './api';
+
 interface PricingFactors {
   distance: number; // in kilometers
   weight: number; // in kg
@@ -7,6 +9,10 @@ interface PricingFactors {
   serviceLevel: 'standard' | 'express';
   orderCount?: number; // for bulk discounts
   demandMultiplier?: number; // real-time demand
+  // New fields for real address handling
+  originAddress?: string;
+  destinationAddress?: string;
+  routeData?: any; // Route data from backend API
 }
 
 interface PricingBreakdown {
@@ -84,6 +90,62 @@ export class PricingEngine {
     return R * c;
   }
 
+  // Calculate real route data using backend APIs
+  static async calculateRealRoute(originAddress: string, destinationAddress: string): Promise<{
+    distance: number;
+    duration: number;
+    routeData: any;
+    startLocation: { lat: number; lng: number };
+    endLocation: { lat: number; lng: number };
+  }> {
+    try {
+      // First validate both addresses are in service area
+      console.log(`Validating addresses: ${originAddress} -> ${destinationAddress}`);
+      
+      const [originValidation, destinationValidation] = await Promise.all([
+        routeAPI.validateServiceArea(originAddress),
+        routeAPI.validateServiceArea(destinationAddress)
+      ]);
+
+      console.log('Address validation results:', { originValidation, destinationValidation });
+
+      if (!originValidation || !originValidation.success || !originValidation.data) {
+        throw new Error(`起点地址不在服务区域内: ${originAddress}`);
+      }
+      
+      if (!destinationValidation || !destinationValidation.success || !destinationValidation.data) {
+        throw new Error(`终点地址不在服务区域内: ${destinationAddress}`);
+      }
+
+      // Calculate route using backend API
+      const routeResponse = await routeAPI.calculateRoute(originAddress, destinationAddress);
+      
+      if (!routeResponse.success || !routeResponse.data) {
+        throw new Error('无法计算路径');
+      }
+
+      const routeData = routeResponse.data;
+      
+      // Extract distance in kilometers
+      const distanceKm = routeData.distanceValue ? (routeData.distanceValue / 1000) : 0;
+      
+      // Extract duration in minutes  
+      const durationMinutes = routeData.durationValue ? (routeData.durationValue / 60) : 0;
+
+      return {
+        distance: distanceKm,
+        duration: durationMinutes,
+        routeData: routeData,
+        startLocation: routeData.startLocation || { lat: 0, lng: 0 },
+        endLocation: routeData.endLocation || { lat: 0, lng: 0 }
+      };
+
+    } catch (error) {
+      console.error('Real route calculation failed:', error);
+      throw error;
+    }
+  }
+
   // Get time-based multiplier
   static getTimeMultiplier(deliveryTime: Date): number {
     const hour = deliveryTime.getHours();
@@ -122,9 +184,17 @@ export class PricingEngine {
   ): number {
     // Simulate demand based on time and location
     const hour = deliveryTime.getHours();
-    const isBusinessDistrict = Math.abs(location.lat - 40.7589) < 0.01; // Near NYC business area
-    const baseMultiplier = 1.0;
     
+    // Check if location is in San Francisco business districts (Financial District/SOMA)
+    // Financial District: ~37.7930, -122.3978
+    // SOMA: ~37.7855, -122.3967
+    const isBusinessDistrict = (
+      Math.abs(location.lat - 37.7930) < 0.01 && Math.abs(location.lng + 122.3978) < 0.01
+    ) || (
+      Math.abs(location.lat - 37.7855) < 0.01 && Math.abs(location.lng + 122.3967) < 0.01
+    );
+    
+    const baseMultiplier = 1.0;
     let demandFactor = 0;
     
     // Time-based demand
@@ -219,10 +289,15 @@ export class PricingEngine {
     const bulkDiscountRate = this.getBulkDiscount(orderCount);
     const bulkDiscount = totalBeforeDiscounts * bulkDiscountRate;
     
-    // Real-time demand adjustment
+    // Real-time demand adjustment - use real location if available from route data
+    let demandLocation = { lat: 37.7749, lng: -122.4194 }; // Default SF coordinates
+    if (factors.routeData && factors.routeData.startLocation) {
+      demandLocation = factors.routeData.startLocation;
+    }
+    
     const finalDemandMultiplier = demandMultiplier || this.getDemandMultiplier(
       deliveryTime,
-      { lat: 40.7589, lon: -73.9851 }, // Default NYC coordinates
+      demandLocation,
       deliveryType
     );
     
@@ -253,6 +328,108 @@ export class PricingEngine {
       estimatedTime,
       available
     };
+  }
+
+  // Calculate pricing with real addresses (async version)
+  static async calculatePricingWithRealAddresses(
+    originAddress: string,
+    destinationAddress: string,
+    factors: Omit<PricingFactors, 'distance' | 'originAddress' | 'destinationAddress' | 'routeData'>
+  ): Promise<DeliveryPricing> {
+    try {
+      // Get real route data from backend
+      const routeInfo = await this.calculateRealRoute(originAddress, destinationAddress);
+      
+      // Create complete pricing factors with real data
+      const completFactors: PricingFactors = {
+        ...factors,
+        distance: routeInfo.distance,
+        originAddress,
+        destinationAddress,
+        routeData: routeInfo.routeData
+      };
+
+      // Calculate pricing using real data
+      return this.calculatePricing(completFactors);
+      
+    } catch (error) {
+      console.error('Failed to calculate pricing with real addresses:', error);
+      // Return error state
+      return {
+        price: 0,
+        breakdown: {} as PricingBreakdown,
+        estimatedTime: 'Not available',
+        available: false
+      };
+    }
+  }
+
+  // Get all delivery options with real address pricing
+  static async getAllDeliveryOptionsWithRealAddresses(
+    originAddress: string,
+    destinationAddress: string,
+    factors: Omit<PricingFactors, 'deliveryType' | 'serviceLevel' | 'distance' | 'originAddress' | 'destinationAddress' | 'routeData'>
+  ): Promise<Array<{
+    id: string;
+    type: 'robot' | 'drone';
+    serviceLevel: 'standard' | 'express';
+    name: string;
+    description: string;
+    pricing: DeliveryPricing;
+  }>> {
+    try {
+      // Get real route data once
+      const routeInfo = await this.calculateRealRoute(originAddress, destinationAddress);
+      
+      const options = [
+        {
+          id: '1',
+          type: 'robot' as const,
+          serviceLevel: 'standard' as const,
+          name: 'Ground Robot - Standard',
+          description: 'Reliable ground delivery robot for secure transport'
+        },
+        {
+          id: '2',
+          type: 'robot' as const,
+          serviceLevel: 'express' as const,
+          name: 'Ground Robot - Express',
+          description: 'Priority ground delivery with faster service'
+        },
+        {
+          id: '3',
+          type: 'drone' as const,
+          serviceLevel: 'standard' as const,
+          name: 'Drone - Standard',
+          description: 'Aerial delivery for urgent packages'
+        },
+        {
+          id: '4',
+          type: 'drone' as const,
+          serviceLevel: 'express' as const,
+          name: 'Drone - Express',
+          description: 'Ultra-fast aerial delivery service'
+        }
+      ];
+
+      return options.map(option => ({
+        ...option,
+        pricing: this.calculatePricing({
+          ...factors,
+          deliveryType: option.type,
+          serviceLevel: option.serviceLevel,
+          distance: routeInfo.distance,
+          originAddress,
+          destinationAddress,
+          routeData: routeInfo.routeData
+        })
+      }));
+      
+    } catch (error) {
+      console.error('Failed to get delivery options with real addresses:', error);
+      // Return empty options on error
+      return [];
+    }
   }
 
   // Get all delivery options with pricing

@@ -22,6 +22,7 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({ route, navigation }) =>
     { id: 5, title: 'Delivered', status: 'pending', time: 'Estimated 3:00 PM' },
   ];
 
+
   if (!order) {
     return (
       <SafeAreaView style={styles.container}>
@@ -44,11 +45,11 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({ route, navigation }) =>
           <Text style={styles.sectionTitle}>Delivery Information</Text>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>From:</Text>
-            <Text style={styles.infoValue}>{order.sender.name}, {order.sender.city}</Text>
+            <Text style={styles.infoValue}>{order.sender.name}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>To:</Text>
-            <Text style={styles.infoValue}>{order.recipient.name}, {order.recipient.city}</Text>
+            <Text style={styles.infoValue}>{order.recipient.name}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Service:</Text>
@@ -89,6 +90,7 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({ route, navigation }) =>
             </View>
           ))}
         </Card>
+
 
         <Card style={styles.additionalInfo}>
           <Text style={styles.sectionTitle}>Additional Information</Text>

@@ -2,6 +2,8 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../contexts/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../utils/theme';
 
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterScreen from '../screens/Auth/RegisterScreen';
@@ -13,7 +15,6 @@ import PaymentScreen from '../screens/Order/PaymentScreen';
 import OrderConfirmScreen from '../screens/Order/OrderConfirmScreen';
 import TrackingScreen from '../screens/Tracking/TrackingScreen';
 import MyParcelsScreen from '../screens/Tracking/MyParcelsScreen';
-import ProfileScreen from '../screens/Profile/ProfileScreen';
 import AddressEditScreen from '../screens/Profile/AddressEditScreen';
 import CustomerSupportScreen from '../screens/Support/CustomerSupportScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
@@ -24,11 +25,30 @@ const Tab = createBottomTabNavigator();
 function MainTabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false
-      }}
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string;
+          
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'MyParcels') {
+            iconName = focused ? 'cube' : 'cube-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else {
+            iconName = 'help-outline';
+          }
+          
+          return <Ionicons name={iconName as any} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.text.tertiary,
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: theme.colors.background.primary,
+          borderTopColor: theme.colors.border.light,
+        }
+      })}
     >
       <Tab.Screen 
         name="Home" 
@@ -38,17 +58,12 @@ function MainTabNavigator() {
       <Tab.Screen 
         name="MyParcels" 
         component={MyParcelsScreen}
-        options={{ tabBarLabel: 'My Parcels' }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
-        options={{ tabBarLabel: 'Profile' }}
+        options={{ tabBarLabel: 'My Order' }}
       />
       <Tab.Screen 
         name="Settings" 
         component={SettingsScreen}
-        options={{ tabBarLabel: 'Settings' }}
+        options={{ tabBarLabel: 'Profile' }}
       />
     </Tab.Navigator>
   );

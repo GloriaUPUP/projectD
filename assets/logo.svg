@@ -1,0 +1,70 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="boxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700" />
+      <stop offset="100%" stop-color="#FFA500" />
+    </linearGradient>
+    <linearGradient id="wingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E6E6FA" />
+    </linearGradient>
+    <radialGradient id="glassGradient" cx="50%" cy="30%">
+      <stop offset="0%" stop-color="#87CEEB" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#4169E1" stop-opacity="0.9" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#6366F1" stroke="#4F46E5" stroke-width="4"/>
+  
+  <!-- Left wing -->
+  <ellipse cx="45" cy="95" rx="35" ry="15" fill="url(#wingGradient)" stroke="#DDD" stroke-width="2" transform="rotate(-20 45 95)"/>
+  <ellipse cx="40" cy="90" rx="25" ry="10" fill="url(#wingGradient)" stroke="#DDD" stroke-width="1" transform="rotate(-25 40 90)"/>
+  
+  <!-- Right wing -->
+  <ellipse cx="155" cy="95" rx="35" ry="15" fill="url(#wingGradient)" stroke="#DDD" stroke-width="2" transform="rotate(20 155 95)"/>
+  <ellipse cx="160" cy="90" rx="25" ry="10" fill="url(#wingGradient)" stroke="#DDD" stroke-width="1" transform="rotate(25 160 90)"/>
+  
+  <!-- Main package box -->
+  <rect x="70" y="80" width="60" height="50" rx="5" fill="url(#boxGradient)" stroke="#E6B800" stroke-width="2"/>
+  
+  <!-- Box details -->
+  <rect x="75" y="85" width="15" height="10" fill="#FFFFFF" stroke="#DDD" stroke-width="1"/>
+  <rect x="110" y="85" width="15" height="10" fill="#FFFFFF" stroke="#DDD" stroke-width="1"/>
+  
+  <!-- String/ribbon around box -->
+  <path d="M70 100 Q85 95 100 100 Q115 105 130 100" stroke="#FFFFFF" stroke-width="3" fill="none"/>
+  <path d="M100 80 Q105 90 100 100 Q95 110 100 130" stroke="#FFFFFF" stroke-width="3" fill="none"/>
+  
+  <!-- Bow/knot at top -->
+  <ellipse cx="95" cy="75" rx="8" ry="5" fill="#FFFFFF" stroke="#DDD" stroke-width="1"/>
+  <ellipse cx="105" cy="75" rx="8" ry="5" fill="#FFFFFF" stroke="#DDD" stroke-width="1"/>
+  <circle cx="100" cy="75" r="4" fill="#FFD700"/>
+  
+  <!-- Aviator glasses frame -->
+  <ellipse cx="85" cy="65" rx="18" ry="12" fill="none" stroke="#2C3E50" stroke-width="3"/>
+  <ellipse cx="115" cy="65" rx="18" ry="12" fill="none" stroke="#2C3E50" stroke-width="3"/>
+  <path d="M103 65 Q107 63 111 65" stroke="#2C3E50" stroke-width="3" fill="none"/>
+  
+  <!-- Glasses lenses -->
+  <ellipse cx="85" cy="65" rx="16" ry="10" fill="url(#glassGradient)" opacity="0.8"/>
+  <ellipse cx="115" cy="65" rx="16" ry="10" fill="url(#glassGradient)" opacity="0.8"/>
+  
+  <!-- Lens reflections -->
+  <ellipse cx="82" cy="62" rx="6" ry="4" fill="#FFFFFF" opacity="0.6"/>
+  <ellipse cx="112" cy="62" rx="6" ry="4" fill="#FFFFFF" opacity="0.6"/>
+  
+  <!-- Glasses temples -->
+  <path d="M67 65 Q60 65 55 70" stroke="#2C3E50" stroke-width="3" fill="none"/>
+  <path d="M133 65 Q140 65 145 70" stroke="#2C3E50" stroke-width="3" fill="none"/>
+  
+  <!-- Motion lines -->
+  <path d="M20 80 Q30 85 25 90" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M175 80 Q185 85 180 90" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M25 110 Q35 115 30 120" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M170 110 Q180 115 175 120" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.7"/>
+  
+  <!-- Package label -->
+  <rect x="75" y="110" width="20" height="8" fill="#FFFFFF" stroke="#DDD" stroke-width="1"/>
+  <text x="85" y="116" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="#333">FRAGILE</text>
+</svg>
