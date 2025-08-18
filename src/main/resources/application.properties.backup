@@ -1,0 +1,53 @@
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/delivery_app
+spring.datasource.username=gloriaupup
+spring.datasource.password=
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Server Configuration
+server.port=8086
+server.servlet.context-path=/api
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=true
+
+# Jackson Configuration
+spring.jackson.default-property-inclusion=non_null
+spring.jackson.property-naming-strategy=SNAKE_CASE
+
+# CORS Configuration
+spring.web.cors.allowed-origins=http://localhost:3000,http://localhost:19006
+spring.web.cors.allowed-methods=GET,POST,PUT,PATCH,DELETE,OPTIONS
+spring.web.cors.allowed-headers=*
+spring.web.cors.allow-credentials=true
+
+# JWT Configuration
+jwt.secret=myVerySecretKeyThatIsLongEnoughForJWTSigningAndMustBeAtLeast256BitsLong
+jwt.expiration=86400000
+
+# Logging Configuration
+logging.level.com.flagcamp.delivery=INFO
+logging.level.org.springframework.security=WARN
+logging.level.org.springframework.web=INFO
+logging.level.org.hibernate.SQL=ERROR
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=ERROR
+logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %m%n
+logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+
+# Payment Configuration
+payment.test-mode=true
+
+# Delivery Configuration
+delivery.max-distance-km=50
+delivery.default-price-per-km=2.5
+delivery.robot.base-price=12.50
+delivery.robot.speed-kmh=15
+delivery.drone.base-price=18.00
+delivery.drone.speed-kmh=45
+delivery.drone.weather-dependent=true
+
+# Google Maps Configuration
+google.maps.api.key=AIzaSyAGi5pZ36OHk8kVSKoLSFstXPFoGlwIQfs

@@ -67,6 +67,10 @@ public class UserService {
             defaultAddress.setPhone(request.getPhone());
             defaultAddress.setDefault(true);
             defaultAddress.setUser(user);
+            // Set required fields
+            defaultAddress.setFormattedAddress(request.getAddress() + ", Default City");
+            defaultAddress.setPlaceId("");
+            defaultAddress.setZipCode("");
             addressRepository.save(defaultAddress);
         }
         

@@ -214,4 +214,16 @@ public class DeliveryController {
                 .body(ApiResponse.error("获取跟踪信息失败", e.getMessage()));
         }
     }
+    
+    @GetMapping("/active-deliveries")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getActiveDeliveries() {
+        try {
+            List<Map<String, Object>> activeDeliveries = orderService.getActiveDeliveriesWithLocation();
+            return ResponseEntity.ok(ApiResponse.success(activeDeliveries));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("获取活跃配送失败", e.getMessage()));
+        }
+    }
 }

@@ -1,0 +1,801 @@
+{
+  "info": {
+    "name": "DeliveryApp Complete API Collection",
+    "description": "Complete API collection for DeliveryApp with all endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8086/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "address_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication & User Management",
+      "item": [
+        {
+          "name": "Register New User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.success && responseJson.data.token) {",
+                  "        pm.collectionVariables.set('jwt_token', responseJson.data.token);",
+                  "        pm.collectionVariables.set('user_id', responseJson.data.user_id);",
+                  "        console.log('✅ User registered successfully');",
+                  "        console.log('🔑 JWT Token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser{{$randomInt}}@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"555-0123\",\n  \"address\": \"123 Main Street, San Francisco, CA\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.success && responseJson.data.token) {",
+                  "        pm.collectionVariables.set('jwt_token', responseJson.data.token);",
+                  "        pm.collectionVariables.set('user_id', responseJson.data.user_id);",
+                  "        console.log('✅ Login successful');",
+                  "        console.log('🔑 JWT Token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"phone\": \"555-9999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/settings",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notifications\": true,\n  \"language\": \"zh-CN\",\n  \"darkMode\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/settings",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "settings"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📦 Order Management",
+      "item": [
+        {
+          "name": "Create New Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.success && responseJson.data.orderId) {",
+                  "        pm.collectionVariables.set('order_id', responseJson.data.orderId);",
+                  "        console.log('📦 Order created:', responseJson.data.orderId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup_info\": {\n    \"address\": \"123 Main Street, San Francisco, CA 94102\",\n    \"contact_name\": \"John Doe\",\n    \"contact_phone\": \"555-0123\",\n    \"instructions\": \"Ring doorbell twice\"\n  },\n  \"delivery_info\": {\n    \"address\": \"456 Oak Avenue, San Francisco, CA 94103\",\n    \"contact_name\": \"Jane Smith\",\n    \"contact_phone\": \"555-0456\",\n    \"instructions\": \"Leave at front door\"\n  },\n  \"package_info\": {\n    \"weight\": 2.5,\n    \"type\": \"electronics\",\n    \"value\": 150.00,\n    \"description\": \"Smartphone accessories\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/history?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "history"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING_PAYMENT",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/ORD1/details",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "ORD1", "details"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Delivery Options for Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/ORD1/delivery-options",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "ORD1", "delivery-options"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Select Delivery Option",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"selectedOptionId\": \"drone_express\",\n  \"preferences\": {\n    \"timeSlot\": \"morning\",\n    \"specialInstructions\": \"Handle with care\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/ORD1/select-option",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "ORD1", "select-option"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/ORD1/status",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "ORD1", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calculate Delivery Options",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup\": {\n    \"address\": \"123 Main Street, San Francisco, CA 94102\",\n    \"coordinates\": {\n      \"lat\": 37.7749,\n      \"lng\": -122.4194\n    }\n  },\n  \"delivery\": {\n    \"address\": \"456 Oak Avenue, San Francisco, CA 94103\",\n    \"coordinates\": {\n      \"lat\": 37.7849,\n      \"lng\": -122.4294\n    }\n  },\n  \"package\": {\n    \"weight\": 2.5,\n    \"dimensions\": {\n      \"length\": 10,\n      \"width\": 8,\n      \"height\": 5\n    },\n    \"value\": 150.00\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/delivery/options",
+              "host": ["{{base_url}}"],
+              "path": ["delivery", "options"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Delivery Recommendations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderHistory\": true,\n  \"preferences\": {\n    \"priority\": \"speed\",\n    \"budget\": \"standard\"\n  },\n  \"pickup\": {\n    \"address\": \"123 Main Street, San Francisco, CA 94102\"\n  },\n  \"delivery\": {\n    \"address\": \"456 Oak Avenue, San Francisco, CA 94103\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/delivery/recommendations",
+              "host": ["{{base_url}}"],
+              "path": ["delivery", "recommendations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Track Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/ORD1",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "ORD1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📍 Address Management",
+      "item": [
+        {
+          "name": "Get All Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/addresses",
+              "host": ["{{base_url}}"],
+              "path": ["addresses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Address by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/addresses/1",
+              "host": ["{{base_url}}"],
+              "path": ["addresses", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add New Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200 || responseCode.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.success && responseJson.data.id) {",
+                  "        pm.collectionVariables.set('address_id', responseJson.data.id);",
+                  "        console.log('📍 Address created:', responseJson.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"address\": \"789 Pine Street, Apt 2B\",\n  \"city\": \"San Francisco\",\n  \"postalCode\": \"94104\",\n  \"phone\": \"555-7890\",\n  \"isDefault\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/addresses",
+              "host": ["{{base_url}}"],
+              "path": ["addresses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home - Updated\",\n  \"address\": \"789 Pine Street, Apt 2B\",\n  \"city\": \"San Francisco\",\n  \"postalCode\": \"94104\",\n  \"phone\": \"555-7890\",\n  \"isDefault\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/addresses/{{address_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["addresses", "{{address_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/addresses/{{address_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["addresses", "{{address_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"123 Main Street\",\n  \"city\": \"San Francisco\",\n  \"state\": \"CA\",\n  \"postalCode\": \"94102\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/addresses/validate",
+              "host": ["{{base_url}}"],
+              "path": ["addresses", "validate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/addresses/search?q=main street san francisco",
+              "host": ["{{base_url}}"],
+              "path": ["addresses", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "main street san francisco"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Address Suggestions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/addresses/suggestions?q=123 main",
+              "host": ["{{base_url}}"],
+              "path": ["addresses", "suggestions"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "123 main"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💳 Payment Management",
+      "item": [
+        {
+          "name": "Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/methods",
+              "host": ["{{base_url}}"],
+              "path": ["payment", "methods"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"ORD1\",\n  \"paymentMethod\": \"credit_card\",\n  \"amount\": 25.50,\n  \"paymentDetails\": {\n    \"cardNumber\": \"4111111111111111\",\n    \"expiryMonth\": \"12\",\n    \"expiryYear\": \"2025\",\n    \"cvv\": \"123\",\n    \"cardholderName\": \"John Doe\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/process",
+              "host": ["{{base_url}}"],
+              "path": ["payment", "process"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🎧 Support & Help",
+      "item": [
+        {
+          "name": "Create Support Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Order delivery issue\",\n  \"description\": \"My order has been delayed for 2 hours without any update\",\n  \"category\": \"delivery\",\n  \"priority\": \"high\",\n  \"orderId\": \"ORD1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/support/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["support", "tickets"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get FAQ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/support/faq?category=general",
+              "host": ["{{base_url}}"],
+              "path": ["support", "faq"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "general"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Add any global pre-request scripts here",
+          "console.log('Making request to:', pm.request.url);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "pm.test('Response has correct content type', function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});"
+        ]
+      }
+    }
+  ]
+}

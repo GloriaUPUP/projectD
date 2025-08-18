@@ -1,0 +1,143 @@
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :resolveMainClassName UP-TO-DATE
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-08-14 16:18:45 - Starting DeliveryAppBackendApplication using Java 21.0.7 with PID 57192 (/Users/gloriaupup/Documents/Laioffer/flagcampwen/DeliveryAppBackend/build/classes/java/main started by gloriaupup in /Users/gloriaupup/Documents/Laioffer/flagcampwen/DeliveryAppBackend)
+2025-08-14 16:18:45 - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-08-14 16:18:45 - No active profile set, falling back to 1 default profile: "default"
+2025-08-14 16:18:45 - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-08-14 16:18:45 - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-08-14 16:18:45 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-08-14 16:18:46 - Finished Spring Data repository scanning in 24 ms. Found 12 JPA repository interfaces.
+2025-08-14 16:18:46 - Tomcat initialized with port 8086 (http)
+2025-08-14 16:18:46 - Starting service [Tomcat]
+2025-08-14 16:18:46 - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-08-14 16:18:46 - Initializing Spring embedded WebApplicationContext
+2025-08-14 16:18:46 - Root WebApplicationContext: initialization completed in 442 ms
+2025-08-14 16:18:46 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-08-14 16:18:46 - HHH000412: Hibernate ORM core version 6.3.1.Final
+2025-08-14 16:18:46 - HHH000026: Second-level cache disabled
+2025-08-14 16:18:46 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-08-14 16:18:46 - HikariPool-1 - Starting...
+2025-08-14 16:18:46 - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@2abb7d8
+2025-08-14 16:18:46 - HikariPool-1 - Start completed.
+2025-08-14 16:18:46 - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-08-14 16:18:46 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-08-14 16:18:46 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-08-14 16:18:46 - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-08-14 16:18:47 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-08-14 16:18:47 - 
+
+Using generated security password: e0196f32-4184-4d2f-b767-a267b81ef05a
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-08-14 16:18:47 - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@7da15859, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@14f765d0, org.springframework.security.web.context.SecurityContextHolderFilter@4975a950, org.springframework.security.web.header.HeaderWriterFilter@413affcd, org.springframework.web.filter.CorsFilter@39f68a79, org.springframework.security.web.authentication.logout.LogoutFilter@3bda0fe1, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@616e301e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@366f31b9, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@193fb999, org.springframework.security.web.session.SessionManagementFilter@3d72d231, org.springframework.security.web.access.ExceptionTranslationFilter@2c1bd17, org.springframework.security.web.access.intercept.AuthorizationFilter@59d61d20]
+2025-08-14 16:18:47 - LiveReload server is running on port 35729
+2025-08-14 16:18:47 - Tomcat started on port 8086 (http) with context path '/api'
+2025-08-14 16:18:47 - Started DeliveryAppBackendApplication in 1.876 seconds (process running for 1.993)
+2025-08-14 16:18:53 - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-08-14 16:18:53 - Initializing Servlet 'dispatcherServlet'
+2025-08-14 16:18:53 - Completed initialization in 1 ms
+2025-08-14 16:18:53 - Securing GET /support/faq
+2025-08-14 16:18:53 - Set SecurityContextHolder to anonymous SecurityContext
+2025-08-14 16:18:53 - Secured GET /support/faq
+2025-08-14 16:21:59 - Restarting due to 68 class path changes (0 additions, 68 deletions, 0 modifications)
+2025-08-14 16:21:59 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-08-14 16:21:59 - HikariPool-1 - Shutdown initiated...
+2025-08-14 16:21:59 - HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-08-14 16:21:59 - Starting DeliveryAppBackendApplication using Java 21.0.7 with PID 57192 (/Users/gloriaupup/Documents/Laioffer/flagcampwen/DeliveryAppBackend/build/classes/java/main started by gloriaupup in /Users/gloriaupup/Documents/Laioffer/flagcampwen/DeliveryAppBackend)
+2025-08-14 16:21:59 - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-08-14 16:21:59 - No active profile set, falling back to 1 default profile: "default"
+2025-08-14 16:21:59 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-08-14 16:21:59 - Finished Spring Data repository scanning in 8 ms. Found 12 JPA repository interfaces.
+2025-08-14 16:21:59 - Tomcat initialized with port 8086 (http)
+2025-08-14 16:21:59 - Starting service [Tomcat]
+2025-08-14 16:21:59 - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-08-14 16:21:59 - Initializing Spring embedded WebApplicationContext
+2025-08-14 16:21:59 - Root WebApplicationContext: initialization completed in 124 ms
+2025-08-14 16:21:59 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-08-14 16:21:59 - HHH000026: Second-level cache disabled
+2025-08-14 16:21:59 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-08-14 16:21:59 - HikariPool-2 - Starting...
+2025-08-14 16:21:59 - HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@73b14456
+2025-08-14 16:21:59 - HikariPool-2 - Start completed.
+2025-08-14 16:21:59 - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-08-14 16:21:59 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-08-14 16:21:59 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-08-14 16:21:59 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-08-14 16:21:59 - 
+
+Using generated security password: 7e434618-e5b7-4952-8602-5e0fb305c8a5
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-08-14 16:21:59 - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@337aeb7a, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6460bc1c, org.springframework.security.web.context.SecurityContextHolderFilter@3b24c3fe, org.springframework.security.web.header.HeaderWriterFilter@7f7f80ce, org.springframework.web.filter.CorsFilter@1437ee04, org.springframework.security.web.authentication.logout.LogoutFilter@1e693495, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@23a5adc8, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@205f2082, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2ee52cf0, org.springframework.security.web.session.SessionManagementFilter@5eafb393, org.springframework.security.web.access.ExceptionTranslationFilter@7f9ce0a2, org.springframework.security.web.access.intercept.AuthorizationFilter@49ae78da]
+2025-08-14 16:22:00 - LiveReload server is running on port 35729
+2025-08-14 16:22:00 - Tomcat started on port 8086 (http) with context path '/api'
+2025-08-14 16:22:00 - Started DeliveryAppBackendApplication in 0.438 seconds (process running for 194.497)
+2025-08-14 16:22:00 - Condition evaluation unchanged
+2025-08-14 16:22:01 - Restarting due to 68 class path changes (68 additions, 0 deletions, 0 modifications)
+2025-08-14 16:22:01 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-08-14 16:22:01 - HikariPool-2 - Shutdown initiated...
+2025-08-14 16:22:01 - HikariPool-2 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-08-14 16:22:01 - Starting DeliveryAppBackendApplication using Java 21.0.7 with PID 57192 (/Users/gloriaupup/Documents/Laioffer/flagcampwen/DeliveryAppBackend/build/classes/java/main started by gloriaupup in /Users/gloriaupup/Documents/Laioffer/flagcampwen/DeliveryAppBackend)
+2025-08-14 16:22:01 - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-08-14 16:22:01 - No active profile set, falling back to 1 default profile: "default"
+2025-08-14 16:22:01 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-08-14 16:22:01 - Finished Spring Data repository scanning in 7 ms. Found 12 JPA repository interfaces.
+2025-08-14 16:22:01 - Tomcat initialized with port 8086 (http)
+2025-08-14 16:22:01 - Starting service [Tomcat]
+2025-08-14 16:22:01 - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-08-14 16:22:01 - Initializing Spring embedded WebApplicationContext
+2025-08-14 16:22:01 - Root WebApplicationContext: initialization completed in 100 ms
+2025-08-14 16:22:01 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-08-14 16:22:01 - HHH000026: Second-level cache disabled
+2025-08-14 16:22:01 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-08-14 16:22:01 - HikariPool-3 - Starting...
+2025-08-14 16:22:01 - HikariPool-3 - Added connection org.postgresql.jdbc.PgConnection@6aa9909c
+2025-08-14 16:22:01 - HikariPool-3 - Start completed.
+2025-08-14 16:22:01 - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-08-14 16:22:01 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-08-14 16:22:01 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-08-14 16:22:01 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-08-14 16:22:01 - 
+
+Using generated security password: 9a7f094e-5d97-407c-b2b8-59c4e777e283
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-08-14 16:22:01 - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@18e9529e, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@3da9b160, org.springframework.security.web.context.SecurityContextHolderFilter@2481e150, org.springframework.security.web.header.HeaderWriterFilter@34316cbc, org.springframework.web.filter.CorsFilter@17426e71, org.springframework.security.web.authentication.logout.LogoutFilter@70caa5f6, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@2e726923, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@1119b4dd, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@7e582cbf, org.springframework.security.web.session.SessionManagementFilter@4321330f, org.springframework.security.web.access.ExceptionTranslationFilter@4d1d506, org.springframework.security.web.access.intercept.AuthorizationFilter@112f1b95]
+2025-08-14 16:22:01 - LiveReload server is running on port 35729
+2025-08-14 16:22:01 - Tomcat started on port 8086 (http) with context path '/api'
+2025-08-14 16:22:01 - Started DeliveryAppBackendApplication in 0.393 seconds (process running for 196.411)
+2025-08-14 16:22:01 - Condition evaluation unchanged

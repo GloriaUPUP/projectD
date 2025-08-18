@@ -30,6 +30,9 @@ public class OrderService {
     @Autowired
     private AddressRepository addressRepository;
     
+    @Autowired
+    private DeliveryTrackingService deliveryTrackingService;
+    
     public DeliveryOrder createOrder(CreateOrderRequest request, Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -77,6 +80,10 @@ public class OrderService {
         newAddress.setPhone("0000000000");
         newAddress.setUser(userRepository.findById(userId).orElse(null));
         newAddress.setDefault(false);
+        // Set required fields
+        newAddress.setFormattedAddress(addressText + ", Default City");
+        newAddress.setPlaceId("");
+        newAddress.setZipCode("00000");
         
         Address saved = addressRepository.save(newAddress);
         return saved.getId();
@@ -258,5 +265,9 @@ public class OrderService {
     
     public Map<String, Object> getTrackingInfo(DeliveryOrder order) {
         return getOrderStatusInfo(order);
+    }
+    
+    public List<Map<String, Object>> getActiveDeliveriesWithLocation() {
+        return deliveryTrackingService.getActiveDeliveriesWithDetails();
     }
 }

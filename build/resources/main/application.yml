@@ -7,8 +7,13 @@ spring:
   application:
     name: delivery-app-backend
     
+  sql:
+    init:
+      mode: never  # 设置为 never 避免意外执行
+      # schema-locations: classpath:db_postgresql_exact.sql
+    
   datasource:
-    url: jdbc:postgresql://localhost:5432/delivery_app
+    url: jdbc:postgresql://localhost:5432/postgres
     username: gloriaupup
     password: ""
     driver-class-name: org.postgresql.Driver
@@ -19,16 +24,20 @@ spring:
     
   jpa:
     hibernate:
-      ddl-auto: none
-    show-sql: false
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        show_sql: true
+        hbm2ddl:
+          auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     
   jackson:
     default-property-inclusion: non_null
-    property-naming-strategy: SNAKE_CASE
+    property-naming-strategy: LOWER_CAMEL_CASE
     
   web:
     cors:
@@ -47,10 +56,20 @@ spring:
 
 logging:
   level:
-    com.flagcamp.delivery: DEBUG
-    org.springframework.security: DEBUG
+    root: WARN
+    com.flagcamp.delivery: INFO
+    org.springframework.boot: INFO
+    org.springframework.security: WARN
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: DEBUG
+    org.hibernate.tool.hbm2ddl: DEBUG
+    org.hibernate.tool.schema: DEBUG
+    org.apache.tomcat: WARN
+    org.hibernate.jpa.internal.util.LogHelper: WARN
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %m%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
 # JWT Configuration
 jwt:
@@ -66,7 +85,9 @@ payment:
 # External APIs
 external-apis:
   google-maps:
-    api-key: ${GOOGLE_MAPS_API_KEY:placeholder}
+    api-key: ${GOOGLE_MAPS_API_KEY:AIzaSyA4XlR03pt55EHDb6S_t3zZcDIC9zDoNk4}
+
+    # Updated to use Places API key for better autocomplete
   
 # Delivery Configuration
 delivery:

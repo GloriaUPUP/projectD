@@ -40,8 +40,8 @@ A comprehensive Spring Boot backend service for the delivery application, provid
 - **Framework**: Spring Boot 3.2.0
 - **Database**: PostgreSQL with JPA/Hibernate
 - **Security**: Spring Security with JWT
-- **Build Tool**: Maven
-- **Java Version**: 17
+- **Build Tool**: Gradle
+- **Java Version**: 21
 
 ## Project Structure
 
@@ -127,8 +127,8 @@ jwt:
 ## Getting Started
 
 ### Prerequisites
-- Java 17 or higher
-- Maven 3.6+
+- Java 21 or higher
+- Gradle 8.5+ (included via wrapper)
 - PostgreSQL 12.0+
 
 ### Setup
@@ -156,8 +156,8 @@ Update the database configuration in `application.yml`
 
 4. **Build and run**
 ```bash
-mvn clean install
-mvn spring-boot:run
+./gradlew build
+./gradlew bootRun
 ```
 
 The application will start on `http://localhost:8086`

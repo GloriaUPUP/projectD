@@ -6,7 +6,6 @@
    - item 字段在 delivery_order
    ========================================================= */
 
-\c delivery_app;
 
 -- 清表（注意：会删数据）
 DROP TABLE IF EXISTS route CASCADE;

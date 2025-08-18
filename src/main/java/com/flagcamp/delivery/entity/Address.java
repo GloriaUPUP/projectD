@@ -42,6 +42,15 @@ public class Address {
     
     private boolean isDefault = false;
     
+    @Column(name = "formatted_address", nullable = false)
+    private String formattedAddress;
+    
+    @Column(name = "place_id", nullable = false)
+    private String placeId = "";
+    
+    @Column(name = "zip_code", nullable = false)
+    private String zipCode = "";
+    
     @Column
     private Double latitude;
     
@@ -70,6 +79,9 @@ public class Address {
         this.postalCode = postalCode;
         this.phone = phone;
         this.user = user;
+        this.formattedAddress = String.format("%s, %s %s", address, city, postalCode != null ? postalCode : "").trim();
+        this.zipCode = postalCode != null ? postalCode : "";
+        this.placeId = "";
     }
     
     // Getters and Setters
@@ -175,6 +187,30 @@ public class Address {
     
     public void setUser(User user) {
         this.user = user;
+    }
+    
+    public String getFormattedAddress() {
+        return formattedAddress;
+    }
+    
+    public void setFormattedAddress(String formattedAddress) {
+        this.formattedAddress = formattedAddress;
+    }
+    
+    public String getPlaceId() {
+        return placeId;
+    }
+    
+    public void setPlaceId(String placeId) {
+        this.placeId = placeId;
+    }
+    
+    public String getZipCode() {
+        return zipCode;
+    }
+    
+    public void setZipCode(String zipCode) {
+        this.zipCode = zipCode;
     }
     
     public String getFullAddress() {
