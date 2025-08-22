@@ -33,7 +33,7 @@ public class DeliveryTrackingController {
             String orderId = (String) request.get("orderId");
             String origin = (String) request.get("origin");
             String destination = (String) request.get("destination");
-            Integer durationMinutes = (Integer) request.getOrDefault("durationMinutes", 3); // 默认3分钟
+            String vehicleType = (String) request.getOrDefault("vehicleType", "robot"); // 默认机器人
             
             if (orderId == null || origin == null || destination == null) {
                 return ResponseEntity.badRequest().body(
@@ -41,10 +41,10 @@ public class DeliveryTrackingController {
                 );
             }
             
-            trackingService.startDeliveryTracking(orderId, origin, destination, durationMinutes);
+            trackingService.startDeliveryTracking(orderId, origin, destination, vehicleType);
             
             return ResponseEntity.ok(
-                ApiResponse.success("配送跟踪已开始", "订单 " + orderId + " 将在 " + durationMinutes + " 分钟内完成配送")
+                ApiResponse.success("配送跟踪已开始", "订单 " + orderId + " 使用 " + vehicleType + " 进行配送，时间将根据距离和速度自动计算")
             );
             
         } catch (Exception e) {

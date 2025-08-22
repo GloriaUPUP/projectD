@@ -114,7 +114,14 @@ public class ModernRouteService {
         Object durationObj = route.get("duration");
         
         if (distanceObj != null) {
-            int distanceMeters = (Integer) distanceObj;
+            int distanceMeters;
+            if (distanceObj instanceof Long) {
+                distanceMeters = ((Long) distanceObj).intValue();
+            } else if (distanceObj instanceof Integer) {
+                distanceMeters = (Integer) distanceObj;
+            } else {
+                distanceMeters = Integer.parseInt(distanceObj.toString());
+            }
             result.put("distanceValue", distanceMeters);
             result.put("distance", formatDistance(distanceMeters));
         }
@@ -171,7 +178,14 @@ public class ModernRouteService {
         Map<String, Object> polylineInfo = (Map<String, Object>) route.get("polyline");
         
         if (distanceObj != null) {
-            int distanceMeters = (Integer) distanceObj;
+            int distanceMeters;
+            if (distanceObj instanceof Long) {
+                distanceMeters = ((Long) distanceObj).intValue();
+            } else if (distanceObj instanceof Integer) {
+                distanceMeters = (Integer) distanceObj;
+            } else {
+                distanceMeters = Integer.parseInt(distanceObj.toString());
+            }
             alternative.put("distance", formatDistance(distanceMeters));
             alternative.put("distanceValue", distanceMeters);
         }

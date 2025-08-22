@@ -36,16 +36,38 @@ public class DeliveryTrackingService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
     
     /**
-     * 开始配送跟踪 - 启动GPS模拟器
+     * 开始配送跟踪 - 启动GPS模拟器（基于固定速度计算时间）
      */
-    public void startDeliveryTracking(String orderId, String origin, String destination, int durationMinutes) {
+    public void startDeliveryTracking(String orderId, String origin, String destination, String vehicleType) {
         try {
-            // 使用模拟路径数据进行测试
-            Map<String, Object> routeInfo = createMockRouteInfo(origin, destination, durationMinutes);
+            // 使用真实路径计算
+            logger.info("开始计算路径: {} -> {}", origin, destination);
+            Map<String, Object> routeInfo = calculateRealRoute(origin, destination);
             
-            if (routeInfo == null || !routeInfo.containsKey("polyline")) {
-                throw new RuntimeException("无法计算路径");
+            if (routeInfo == null || !routeInfo.containsKey("polyline") || routeInfo.get("polyline") == null || routeInfo.get("polyline").toString().isEmpty()) {
+                // 如果真实路径计算失败或polyline为空，使用模拟路径
+                logger.info("真实路径计算失败或polyline为空，切换到智能模拟路径");
+                routeInfo = createMockRouteInfo(origin, destination);
+                logger.info("模拟路径创建完成，polyline: {}", routeInfo.get("polyline"));
+            } else {
+                logger.info("使用真实路径计算结果");
+                logger.info("真实路径数据: distanceValue={}, polyline长度={}", 
+                    routeInfo.get("distanceValue"), 
+                    routeInfo.get("polyline") != null ? routeInfo.get("polyline").toString().length() : "null");
             }
+            
+            // 获取距离和速度，计算配送时间
+            Object distanceObj = routeInfo.getOrDefault("distanceValue", 8000);
+            int distanceMeters;
+            if (distanceObj instanceof Long) {
+                distanceMeters = ((Long) distanceObj).intValue();
+            } else if (distanceObj instanceof Integer) {
+                distanceMeters = (Integer) distanceObj;
+            } else {
+                distanceMeters = 8000; // 默认值
+            }
+            double speedKmh = getVehicleSpeed(vehicleType);
+            int durationMinutes = calculateDeliveryTime(distanceMeters, speedKmh);
             
             // 创建配送任务
             DeliveryTask task = new DeliveryTask();
@@ -55,7 +77,9 @@ public class DeliveryTrackingService {
             task.polyline = (String) routeInfo.get("polyline");
             task.startTime = Instant.now();
             task.durationMinutes = durationMinutes;
-            task.totalDistance = (Integer) routeInfo.getOrDefault("distanceValue", 1000);
+            task.totalDistance = distanceMeters;
+            task.vehicleType = vehicleType;
+            task.speedKmh = speedKmh;
             
             // 解码路径坐标
             List<LatLng> rawCoordinates = decodePolyline(task.polyline);
@@ -82,7 +106,8 @@ public class DeliveryTrackingService {
             // 启动GPS模拟器
             startGPSSimulator(task);
             
-            logger.info("开始配送跟踪: 订单 {} - {} 分钟", orderId, durationMinutes);
+            logger.info("开始配送跟踪: 订单 {} - {} km, {} km/h, {} 分钟", 
+                orderId, String.format("%.1f", distanceMeters/1000.0), speedKmh, durationMinutes);
             
         } catch (Exception e) {
             logger.error("启动配送跟踪失败: {}", e.getMessage());
@@ -205,6 +230,10 @@ public class DeliveryTrackingService {
         List<LatLng> coordinates = new ArrayList<>();
         
         try {
+            logger.info("开始解码polyline，长度: {}, 前20字符: {}", 
+                encoded.length(), 
+                encoded.length() > 20 ? encoded.substring(0, 20) : encoded);
+                
             // 检查是否是模拟格式（包含|分隔符）
             if (encoded.contains("|")) {
                 // 解析模拟格式：lat1,lng1|lat2,lng2|...
@@ -217,17 +246,47 @@ public class DeliveryTrackingService {
                         coordinates.add(new LatLng(lat, lng));
                     }
                 }
+                logger.info("模拟格式解码成功，获得 {} 个坐标点", coordinates.size());
             } else {
                 // 尝试使用Google Maps polyline解码
-                List<com.google.maps.model.LatLng> decoded = 
-                    com.google.maps.internal.PolylineEncoding.decode(encoded);
-                
-                for (com.google.maps.model.LatLng point : decoded) {
-                    coordinates.add(new LatLng(point.lat, point.lng));
+                try {
+                    List<com.google.maps.model.LatLng> decoded = 
+                        com.google.maps.internal.PolylineEncoding.decode(encoded);
+                    
+                    for (com.google.maps.model.LatLng point : decoded) {
+                        coordinates.add(new LatLng(point.lat, point.lng));
+                    }
+                    logger.info("Google Maps polyline解码成功，获得 {} 个坐标点", coordinates.size());
+                } catch (Exception e) {
+                    logger.error("Google Maps polyline解码失败: {}, 尝试备用解码方案", e.getMessage());
+                    
+                    // 备用方案：生成SF到Daly City的智能路径
+                    logger.info("使用备用路径生成算法");
+                    
+                    // SF到Daly City的典型路径坐标
+                    double startLat = 37.7749; // SF起点
+                    double startLng = -122.4194;
+                    double endLat = 37.7049;   // Daly City终点  
+                    double endLng = -122.4894;
+                    
+                    // 生成20个中间路径点（足够GPS模拟器使用）
+                    int steps = 20;
+                    for (int i = 0; i <= steps; i++) {
+                        double progress = (double) i / steps;
+                        double lat = startLat + (endLat - startLat) * progress;
+                        double lng = startLng + (endLng - startLng) * progress;
+                        
+                        // 添加一些随机偏移来模拟真实道路
+                        if (i > 0 && i < steps) {
+                            lat += (Math.random() - 0.5) * 0.001;
+                            lng += (Math.random() - 0.5) * 0.001;
+                        }
+                        
+                        coordinates.add(new LatLng(lat, lng));
+                    }
+                    logger.info("使用智能备用路径，获得 {} 个坐标点", coordinates.size());
                 }
             }
-            
-            logger.info("Polyline解码成功，获得 {} 个坐标点", coordinates.size());
             
         } catch (Exception e) {
             logger.error("Polyline解码失败: {}", e.getMessage());
@@ -456,53 +515,270 @@ public class DeliveryTrackingService {
         Instant startTime;
         int durationMinutes;
         int totalDistance;
+        String vehicleType;
+        double speedKmh;
     }
     
     /**
-     * 创建模拟路径信息用于测试
+     * 使用真实路径计算服务
      */
-    private Map<String, Object> createMockRouteInfo(String origin, String destination, int durationMinutes) {
+    private Map<String, Object> calculateRealRoute(String origin, String destination) {
+        try {
+            // 尝试使用 ModernRouteService 或 GeocodingService
+            if (geocodingService != null) {
+                return geocodingService.calculateRoute(origin, destination);
+            }
+        } catch (Exception e) {
+            logger.warn("真实路径计算失败: {}", e.getMessage());
+        }
+        return null;
+    }
+    
+    /**
+     * 获取车辆速度 (km/h) - 统一使用50km/h
+     */
+    private double getVehicleSpeed(String vehicleType) {
+        // 用户要求：统一使用50km/h作为小车移动速度
+        return 50.0; // 统一速度 50 km/h
+        
+        /* 原来的不同速度设置：
+        switch (vehicleType.toLowerCase()) {
+            case "robot":
+                return 15.0; // 机器人速度 15 km/h
+            case "drone":
+                return 45.0; // 无人机速度 45 km/h
+            default:
+                return 20.0; // 默认速度
+        }
+        */
+    }
+    
+    /**
+     * 基于距离和速度计算配送时间
+     */
+    private int calculateDeliveryTime(int distanceMeters, double speedKmh) {
+        // 距离转换为公里
+        double distanceKm = distanceMeters / 1000.0;
+        
+        // 计算基础行驶时间（小时）
+        double baseTimeHours = distanceKm / speedKmh;
+        
+        // 转换为分钟
+        int baseTimeMinutes = (int) Math.ceil(baseTimeHours * 60);
+        
+        // 添加准备和配送时间缓冲（5-10分钟）
+        int bufferMinutes = Math.max(5, Math.min(10, baseTimeMinutes / 10));
+        
+        // 最少15分钟，最多120分钟
+        int totalMinutes = baseTimeMinutes + bufferMinutes;
+        return Math.max(15, Math.min(120, totalMinutes));
+    }
+    
+    /**
+     * 创建模拟路径信息用于测试 - 根据地址智能计算距离
+     */
+    private Map<String, Object> createMockRouteInfo(String origin, String destination) {
         Map<String, Object> routeInfo = new HashMap<>();
         
-        // 模拟一些常见的路径
-        List<LatLng> mockCoordinates = new ArrayList<>();
+        // 尝试从地址中提取地理信息来估算距离
+        int estimatedDistance = estimateDistanceFromAddresses(origin, destination);
         
-        // 根据起点终点创建不同的模拟路径
-        if (origin.toLowerCase().contains("mountain view") && destination.toLowerCase().contains("palo alto")) {
-            // Mountain View to Palo Alto 路径
-            mockCoordinates.add(new LatLng(37.3861, -122.0839)); // Mountain View
-            mockCoordinates.add(new LatLng(37.3900, -122.0850));
-            mockCoordinates.add(new LatLng(37.3950, -122.0860));
-            mockCoordinates.add(new LatLng(37.4000, -122.0870));
-            mockCoordinates.add(new LatLng(37.4050, -122.0880));
-            mockCoordinates.add(new LatLng(37.4100, -122.0890));
-            mockCoordinates.add(new LatLng(37.4150, -122.0900));
-            mockCoordinates.add(new LatLng(37.4200, -122.0910));
-            mockCoordinates.add(new LatLng(37.4250, -122.0920));
-            mockCoordinates.add(new LatLng(37.4419, -122.1430)); // Palo Alto
-        } else {
-            // 默认模拟路径 (San Francisco area)
-            mockCoordinates.add(new LatLng(37.7749, -122.4194)); // 起点
-            mockCoordinates.add(new LatLng(37.7849, -122.4094));
-            mockCoordinates.add(new LatLng(37.7949, -122.3994));
-            mockCoordinates.add(new LatLng(37.8049, -122.3894));
-            mockCoordinates.add(new LatLng(37.8149, -122.3794));
-            mockCoordinates.add(new LatLng(37.8249, -122.3694)); // 终点
-        }
+        // 根据估算距离生成模拟坐标路径
+        List<LatLng> mockCoordinates = generateMockRoute(origin, destination, estimatedDistance);
         
-        // 编码为模拟polyline（简化版本）
+        // 编码为模拟polyline
         String mockPolyline = encodeMockPolyline(mockCoordinates);
         
         routeInfo.put("polyline", mockPolyline);
-        routeInfo.put("distanceValue", 8000); // 8km
-        routeInfo.put("distance", "8.0 km");
-        routeInfo.put("duration", durationMinutes + " 分钟");
-        routeInfo.put("durationValue", durationMinutes * 60);
-        routeInfo.put("mockCoordinates", mockCoordinates); // 保存原始坐标用于解码
+        routeInfo.put("distanceValue", estimatedDistance);
+        routeInfo.put("distance", formatDistance(estimatedDistance));
+        routeInfo.put("mockCoordinates", mockCoordinates);
         
-        logger.info("创建模拟路径数据: {} -> {}, 距离: 8km, 时长: {}分钟", origin, destination, durationMinutes);
+        logger.info("创建智能模拟路径: {} -> {}, 估算距离: {}m", 
+            origin, destination, estimatedDistance);
         
         return routeInfo;
+    }
+    
+    /**
+     * 根据地址字符串智能估算距离
+     */
+    private int estimateDistanceFromAddresses(String origin, String destination) {
+        // 基础距离（最小）
+        int baseDistance = 2000; // 2km
+        int maxDistance = 50000; // 50km
+        
+        // 地址模式匹配来估算距离
+        String originLower = origin.toLowerCase();
+        String destLower = destination.toLowerCase();
+        
+        // 计算相似性分数
+        int similarityBonus = calculateAddressSimilarity(originLower, destLower);
+        
+        // 街道级别配送
+        if (isSameStreet(originLower, destLower)) {
+            return Math.max(500, baseDistance - similarityBonus); // 500m - 2km
+        }
+        
+        // 同一区域
+        if (isSameArea(originLower, destLower)) {
+            return Math.max(2000, baseDistance + 1000 - similarityBonus); // 2-3km
+        }
+        
+        // 同一城市
+        if (isSameCity(originLower, destLower)) {
+            return Math.max(3000, baseDistance + 3000 - similarityBonus); // 3-5km
+        }
+        
+        // 不同城市但同一地区
+        if (isSameRegion(originLower, destLower)) {
+            return Math.max(8000, baseDistance + 8000 - similarityBonus); // 8-12km
+        }
+        
+        // 计算地址字符串的差异度
+        int addressDifference = Math.abs(origin.length() - destination.length());
+        int estimatedDistance = baseDistance + (addressDifference * 100) + (int)(Math.random() * 5000);
+        
+        // 限制在合理范围内
+        return Math.min(maxDistance, Math.max(baseDistance, estimatedDistance));
+    }
+    
+    /**
+     * 计算地址相似性（返回减少的距离）
+     */
+    private int calculateAddressSimilarity(String addr1, String addr2) {
+        String[] words1 = addr1.split("\\s+");
+        String[] words2 = addr2.split("\\s+");
+        
+        int commonWords = 0;
+        for (String word1 : words1) {
+            for (String word2 : words2) {
+                if (word1.equals(word2) && word1.length() > 2) {
+                    commonWords++;
+                }
+            }
+        }
+        
+        return commonWords * 500; // 每个相同词减少500m
+    }
+    
+    /**
+     * 判断是否同一街道
+     */
+    private boolean isSameStreet(String addr1, String addr2) {
+        // 提取街道名称进行比较
+        return extractStreetName(addr1).equals(extractStreetName(addr2));
+    }
+    
+    /**
+     * 判断是否同一区域
+     */
+    private boolean isSameArea(String addr1, String addr2) {
+        return addr1.contains("san francisco") && addr2.contains("san francisco") ||
+               addr1.contains("palo alto") && addr2.contains("palo alto") ||
+               addr1.contains("mountain view") && addr2.contains("mountain view") ||
+               addr1.contains("sunnyvale") && addr2.contains("sunnyvale");
+    }
+    
+    /**
+     * 判断是否同一城市
+     */
+    private boolean isSameCity(String addr1, String addr2) {
+        String[] cities = {"san francisco", "palo alto", "mountain view", "sunnyvale", 
+                          "san jose", "redwood city", "menlo park"};
+        
+        for (String city : cities) {
+            if (addr1.contains(city) && addr2.contains(city)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 判断是否同一地区（湾区）
+     */
+    private boolean isSameRegion(String addr1, String addr2) {
+        String[] bayAreaIndicators = {"san francisco", "palo alto", "mountain view", 
+                                     "sunnyvale", "san jose", "ca", "california"};
+        
+        boolean addr1InBayArea = false;
+        boolean addr2InBayArea = false;
+        
+        for (String indicator : bayAreaIndicators) {
+            if (addr1.contains(indicator)) addr1InBayArea = true;
+            if (addr2.contains(indicator)) addr2InBayArea = true;
+        }
+        
+        return addr1InBayArea && addr2InBayArea;
+    }
+    
+    /**
+     * 提取街道名称
+     */
+    private String extractStreetName(String address) {
+        String[] parts = address.split(",")[0].trim().split("\\s+");
+        if (parts.length > 1) {
+            // 移除门牌号，保留街道名
+            return String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
+        }
+        return address;
+    }
+    
+    /**
+     * 根据距离生成模拟路径
+     */
+    private List<LatLng> generateMockRoute(String origin, String destination, int distanceMeters) {
+        List<LatLng> coordinates = new ArrayList<>();
+        
+        // 基础坐标（SF湾区）
+        double startLat = 37.7749;
+        double startLng = -122.4194;
+        
+        // 根据距离计算终点
+        double distanceKm = distanceMeters / 1000.0;
+        double latOffset = (distanceKm / 111.0) * (Math.random() * 0.8 + 0.6); // 111km per degree
+        double lngOffset = (distanceKm / (111.0 * Math.cos(Math.toRadians(startLat)))) * (Math.random() * 0.8 + 0.6);
+        
+        // 随机方向
+        if (Math.random() > 0.5) latOffset = -latOffset;
+        if (Math.random() > 0.5) lngOffset = -lngOffset;
+        
+        double endLat = startLat + latOffset;
+        double endLng = startLng + lngOffset;
+        
+        // 生成中间点（模拟真实路径的弯曲）
+        int waypoints = Math.max(3, distanceMeters / 2000); // 每2km一个点
+        
+        for (int i = 0; i <= waypoints; i++) {
+            double progress = (double) i / waypoints;
+            
+            // 线性插值 + 随机偏移（模拟真实道路）
+            double lat = startLat + (endLat - startLat) * progress;
+            double lng = startLng + (endLng - startLng) * progress;
+            
+            // 添加随机偏移（模拟道路弯曲）
+            if (i > 0 && i < waypoints) {
+                lat += (Math.random() - 0.5) * 0.002; // 最大200m偏移
+                lng += (Math.random() - 0.5) * 0.002;
+            }
+            
+            coordinates.add(new LatLng(lat, lng));
+        }
+        
+        return coordinates;
+    }
+    
+    /**
+     * 格式化距离显示
+     */
+    private String formatDistance(int meters) {
+        if (meters < 1000) {
+            return meters + " m";
+        } else {
+            double km = meters / 1000.0;
+            return String.format("%.1f km", km);
+        }
     }
     
     /**

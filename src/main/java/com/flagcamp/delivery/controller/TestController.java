@@ -18,20 +18,20 @@ public class TestController {
     
     /**
      * 创建测试订单并启动配送跟踪
-     * POST /api/test/delivery?orderId=xxx&origin=xxx&destination=xxx&duration=3
+     * POST /api/test/delivery?orderId=xxx&origin=xxx&destination=xxx&vehicleType=robot
      */
     @PostMapping("/delivery")
     public ResponseEntity<ApiResponse<String>> startTestDelivery(
             @RequestParam String orderId,
             @RequestParam String origin,
             @RequestParam String destination,
-            @RequestParam(defaultValue = "3") int duration) {
+            @RequestParam(defaultValue = "robot") String vehicleType) {
         
         try {
-            deliveryTrackingService.startDeliveryTracking(orderId, origin, destination, duration);
+            deliveryTrackingService.startDeliveryTracking(orderId, origin, destination, vehicleType);
             
             return ResponseEntity.ok(
-                ApiResponse.success("配送跟踪已启动", "订单 " + orderId + " 的GPS模拟已开始，预计 " + duration + " 分钟送达")
+                ApiResponse.success("配送跟踪已启动", "订单 " + orderId + " 的GPS模拟已开始，使用 " + vehicleType + " 配送，时间将根据距离自动计算")
             );
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
