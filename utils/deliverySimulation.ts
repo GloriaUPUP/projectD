@@ -20,6 +20,9 @@ export interface SimulationConfig {
   originAddress?: string;
   destinationAddress?: string;
   useRealRoute?: boolean;
+  // New fields for speed-based time calculation
+  vehicleType?: 'robot' | 'drone';
+  useSpeedBasedTime?: boolean;
 }
 
 export class DeliverySimulator {
@@ -27,7 +30,31 @@ export class DeliverySimulator {
   private updateInterval: NodeJS.Timeout | null = null;
   private callbacks: Map<string, (deliveries: DeliveryProgress[]) => void> = new Map();
 
+  // Vehicle speed configuration (km/h)
+  private static readonly VEHICLE_SPEEDS = {
+    robot: 15,   // 机器人速度 15 km/h
+    drone: 45    // 无人机速度 45 km/h
+  };
+
   constructor(private updateIntervalMs: number = 2000) {}
+
+  // Calculate delivery time based on distance and vehicle speed
+  private static calculateDeliveryTime(distanceKm: number, vehicleType: 'robot' | 'drone'): number {
+    const speed = this.VEHICLE_SPEEDS[vehicleType];
+    
+    // Calculate base travel time in hours
+    const baseTimeHours = distanceKm / speed;
+    
+    // Convert to minutes
+    const baseTimeMinutes = Math.ceil(baseTimeHours * 60);
+    
+    // Add buffer time for preparation and delivery (5-10 minutes)
+    const bufferMinutes = Math.max(5, Math.min(10, Math.floor(baseTimeMinutes / 10)));
+    
+    // Total time with minimum of 15 minutes and maximum of 120 minutes
+    const totalMinutes = baseTimeMinutes + bufferMinutes;
+    return Math.max(15, Math.min(120, totalMinutes));
+  }
 
   // Decode Google polyline to get route points using Mapbox library
   private static decodePolyline(encoded: string): { lat: number; lng: number }[] {
@@ -148,6 +175,8 @@ export class DeliverySimulator {
       originAddress,
       destinationAddress,
       useRealRoute = false,
+      vehicleType = 'robot',
+      useSpeedBasedTime = false,
     } = config;
 
     let routePoints: { lat: number; lng: number }[];
@@ -172,15 +201,24 @@ export class DeliverySimulator {
       routePoints[routePoints.length - 1] || endLocation
     );
     
+    // Calculate actual delivery time if using speed-based calculation
+    let actualDeliveryTime = totalTimeMinutes;
+    if (useSpeedBasedTime) {
+      actualDeliveryTime = DeliverySimulator.calculateDeliveryTime(totalDistance, vehicleType);
+      console.log(`Speed-based time calculation: ${totalDistance.toFixed(2)}km with ${vehicleType} = ${actualDeliveryTime} minutes`);
+    }
+    
     const simulation = {
       orderId,
       routePoints,
       currentPointIndex: 0,
-      totalTimeMinutes,
+      totalTimeMinutes: actualDeliveryTime,
       totalDistance,
       startTime: Date.now(),
       isCompleted: false,
       isRealRoute: useRealRoute && originAddress && destinationAddress,
+      vehicleType,
+      speedKmh: DeliverySimulator.VEHICLE_SPEEDS[vehicleType],
       
       getCurrentProgress: (): DeliveryProgress => {
         const { currentPointIndex, routePoints, totalTimeMinutes, startTime } = simulation;
@@ -231,6 +269,25 @@ export class DeliverySimulator {
       destinationAddress,
       useRealRoute: true,
       totalTimeMinutes
+    });
+  }
+
+  // 便捷方法：基于速度创建配送模拟
+  async createSpeedBasedSimulation(
+    orderId: string,
+    originAddress: string,
+    destinationAddress: string,
+    vehicleType: 'robot' | 'drone' = 'robot'
+  ): Promise<void> {
+    return this.createDeliverySimulationAsync({
+      orderId,
+      startLocation: { lat: 0, lng: 0 }, // Will be replaced with real data
+      endLocation: { lat: 0, lng: 0 },   // Will be replaced with real data
+      originAddress,
+      destinationAddress,
+      useRealRoute: true,
+      useSpeedBasedTime: true,
+      vehicleType
     });
   }
 

@@ -214,23 +214,25 @@ export class PricingEngine {
     return Math.max(0.8, Math.min(1.5, baseMultiplier + demandFactor));
   }
 
-  // Calculate estimated delivery time
+  // Calculate estimated delivery time (consistent with backend speeds)
   static getEstimatedTime(
     distance: number,
     deliveryType: 'robot' | 'drone',
     serviceLevel: 'standard' | 'express'
   ): string {
     const speeds = {
-      robot: { standard: 15, express: 25 }, // km/h
-      drone: { standard: 45, express: 65 }   // km/h
+      robot: { standard: 15, express: 15 }, // km/h - consistent speed for robots
+      drone: { standard: 45, express: 45 }   // km/h - consistent speed for drones
     };
     
     const speed = speeds[deliveryType][serviceLevel];
     const baseTimeHours = distance / speed;
     
-    // Add processing and handling time
-    const processingTime = serviceLevel === 'express' ? 0.25 : 0.5; // 15-30 min
-    const totalHours = baseTimeHours + processingTime;
+    // Add processing and handling time (5-10 minutes buffer)
+    const processingTimeMinutes = Math.max(5, Math.min(10, Math.floor(baseTimeHours * 60 / 10)));
+    const baseTimeMinutes = Math.ceil(baseTimeHours * 60);
+    const totalMinutes = Math.max(15, Math.min(120, baseTimeMinutes + processingTimeMinutes));
+    const totalHours = totalMinutes / 60;
     
     if (totalHours < 1) {
       return `${Math.round(totalHours * 60)} minutes`;

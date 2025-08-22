@@ -65,6 +65,7 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
   const [isTracking, setIsTracking] = useState(false);
   const [animatedCarPosition] = useState(new Animated.ValueXY({ x: 0, y: 0 }));
   const [carRouteProgress, setCarRouteProgress] = useState(0);
+  const [calculatedDuration, setCalculatedDuration] = useState<number>(trackingDuration); // 存储后端计算的真实时间
   const [mapRegion, setMapRegion] = useState<Region>({
     latitude: 37.7749,
     longitude: -122.4194,
@@ -111,6 +112,33 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
     };
   }, [orderId, enableRealTimeTracking]);
 
+  // 解析时间字符串为分钟数
+  const parseTimeToMinutes = (timeString: string): number => {
+    if (!timeString) return trackingDuration; // 默认值
+    
+    // 尝试匹配 "X 分钟", "X分钟", "X minutes" 等格式
+    const minuteMatch = timeString.match(/(\d+)\s*[分钟minutes]/i);
+    if (minuteMatch) {
+      return parseInt(minuteMatch[1]);
+    }
+    
+    // 尝试匹配 "X 小时 Y 分钟" 格式
+    const hourMinuteMatch = timeString.match(/(\d+)\s*[小时hours]\s*(\d+)\s*[分钟minutes]/i);
+    if (hourMinuteMatch) {
+      return parseInt(hourMinuteMatch[1]) * 60 + parseInt(hourMinuteMatch[2]);
+    }
+    
+    // 尝试匹配 "X 小时" 格式
+    const hourMatch = timeString.match(/(\d+)\s*[小时hours]/i);
+    if (hourMatch) {
+      return parseInt(hourMatch[1]) * 60;
+    }
+    
+    // 如果都无法匹配，返回默认值
+    console.log('无法解析时间字符串:', timeString, '使用默认值');
+    return trackingDuration;
+  };
+
   const calculateMultipleRoutes = async () => {
     try {
       const response = await routeAPI.calculateRoute(origin, destination);
@@ -118,6 +146,14 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
       if (response.success && response.data) {
         const mainRoute = processRoute(response.data, '#1976D2', 6, '主路径');
         const processedRoutes = [mainRoute];
+        
+        // 解析后端返回的真实时间
+        if (response.data.duration) {
+          const realDuration = parseTimeToMinutes(response.data.duration);
+          setCalculatedDuration(realDuration);
+          console.log(`🕐 后端计算时间: ${response.data.duration} → ${realDuration}分钟`);
+          console.log(`📏 距离: ${response.data.distance}`);
+        }
         
         // 处理备选路径
         if (showAlternatives && response.data.alternatives) {
@@ -299,7 +335,7 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
         orderId: orderId || '',
         origin,
         destination,
-        duration: trackingDuration.toString()
+        duration: calculatedDuration.toString()
       });
       
       const response = await fetch(`http://192.168.1.88:8086/api/test/delivery?${params}`, {
@@ -339,10 +375,10 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
     
     const route = routes[0].coordinates;
     const totalSteps = route.length;
-    const animationDuration = trackingDuration * 60 * 1000; // 转换为毫秒
+    const animationDuration = calculatedDuration * 60 * 1000; // 使用真实计算时间，转换为毫秒
     const stepDuration = animationDuration / totalSteps;
     
-    console.log(`🚗 Starting car animation with ${totalSteps} steps over ${trackingDuration} minutes`);
+    console.log(`🚗 Starting car animation with ${totalSteps} steps over ${calculatedDuration} minutes (real calculated time)`);
     
     let currentStep = 0;
     
@@ -356,7 +392,7 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
         orderId: orderId || '',
         status: 'tracking_started',
         message: '🚗 GPS跟踪已启动，配送车辆正在前往取件地点...',
-        eta: `${trackingDuration}分钟`,
+        eta: `${calculatedDuration}分钟`,
         timestamp: new Date().toLocaleTimeString(),
         progress: 0
       });
@@ -451,7 +487,7 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
     ];
     
     const totalSteps = simulatedRoute.length;
-    const animationDuration = trackingDuration * 60 * 1000;
+    const animationDuration = calculatedDuration * 60 * 1000;
     const stepDuration = animationDuration / totalSteps;
     
     let currentStep = 0;
@@ -637,7 +673,7 @@ const EnhancedRouteMapView: React.FC<EnhancedRouteMapProps> = ({
         <View style={styles.controlButtons}>
           {!isTracking ? (
             <TouchableOpacity style={styles.startButton} onPress={startDeliveryTracking}>
-              <Text style={styles.buttonText}>开始 {trackingDuration}分钟 配送模拟</Text>
+              <Text style={styles.buttonText}>开始 {calculatedDuration}分钟 配送模拟</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.stopButton} onPress={stopDeliveryTracking}>

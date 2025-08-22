@@ -142,7 +142,7 @@ const mockDeliveryOptions: DeliveryOption[] = [
     type: 'robot',
     name: '机器人配送',
     price: 12.50,
-    estimatedTime: '45分钟',
+    estimatedTime: 'calculating...', // 将由pricingEngine动态计算
     description: '地面机器人配送，适合大部分物件',
     availableCount: 3
   },
@@ -151,7 +151,7 @@ const mockDeliveryOptions: DeliveryOption[] = [
     type: 'drone', 
     name: '无人机配送',
     price: 18.00,
-    estimatedTime: '20分钟',
+    estimatedTime: 'calculating...', // 将由pricingEngine动态计算
     description: '空中无人机配送，快速直达',
     availableCount: 2,
     weatherDependent: true

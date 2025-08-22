@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "DeliveryApp.app"
-               BlueprintName = "DeliveryApp"
-               ReferencedContainer = "container:DeliveryApp.xcodeproj">
+               BuildableName = "ParcelPilot.app"
+               BlueprintName = "ParcelPilot"
+               ReferencedContainer = "container:ParcelPilot.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "DeliveryAppTests.xctest"
-               BlueprintName = "DeliveryAppTests"
-               ReferencedContainer = "container:DeliveryApp.xcodeproj">
+               BuildableName = "ParcelPilotTests.xctest"
+               BlueprintName = "ParcelPilotTests"
+               ReferencedContainer = "container:ParcelPilot.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "DeliveryApp.app"
-            BlueprintName = "DeliveryApp"
-            ReferencedContainer = "container:DeliveryApp.xcodeproj">
+            BuildableName = "ParcelPilot.app"
+            BlueprintName = "ParcelPilot"
+            ReferencedContainer = "container:ParcelPilot.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "DeliveryApp.app"
-            BlueprintName = "DeliveryApp"
-            ReferencedContainer = "container:DeliveryApp.xcodeproj">
+            BuildableName = "ParcelPilot.app"
+            BlueprintName = "ParcelPilot"
+            ReferencedContainer = "container:ParcelPilot.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
